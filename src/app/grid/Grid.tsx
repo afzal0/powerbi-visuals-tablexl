@@ -78,12 +78,29 @@ export function Grid(props: Props): JSX.Element {
     const [focusedIndex, setFocusedIndex] = React.useState(0);
 
     const rowHeight = style.body.rowHeight;
+
+    /**
+     * Wrapped cells have no height that can be known before layout, so rows
+     * have to be measured after they render. Measurement is only switched on
+     * when some column actually wraps: for the common unwrapped case a fixed
+     * row height keeps 30,000 rows cheap to virtualise.
+     */
+    const wrapsRows = React.useMemo(
+        () => style.body.wrapText || columns.some((column) => column.fmt.wrapText),
+        [style.body.wrapText, columns]
+    );
+
     const virtualizer = useVirtualizer({
         count: rows.length,
         getScrollElement: () => scrollRef.current,
         estimateSize: () => rowHeight,
         overscan: 10
     });
+
+    // Re-measure whenever something that changes a row's height changes.
+    React.useEffect(() => {
+        virtualizer.measure();
+    }, [virtualizer, wrapsRows, rowHeight, style.body.fontSize, style.grid.paddingX, widths, columns]);
 
     const sortLookup = React.useMemo(() => {
         const map = new Map<string, { dir: SortEntry["dir"]; index: number }>();
@@ -228,12 +245,16 @@ export function Grid(props: Props): JSX.Element {
                                 role="row"
                                 aria-rowindex={virtualRow.index + 2}
                                 aria-selected={isSelected}
+                                data-index={virtualRow.index}
+                                ref={wrapsRows ? virtualizer.measureElement : undefined}
                                 style={{
                                     position: "absolute",
                                     top: 0,
                                     left: 0,
                                     width: "100%",
-                                    height: rowHeight,
+                                    // Wrapped rows grow past the configured height.
+                                    height: wrapsRows ? undefined : rowHeight,
+                                    minHeight: rowHeight,
                                     transform: `translateY(${virtualRow.start}px)`,
                                     background: rowBackground,
                                     borderBottom: rowBorder
@@ -323,7 +344,10 @@ export function Grid(props: Props): JSX.Element {
                                                 background,
                                                 color,
                                                 borderRight: cellBorder,
-                                                padding: `0 ${style.grid.paddingX}px`,
+                                                padding: wrap
+                                                    ? `4px ${style.grid.paddingX}px`
+                                                    : `0 ${style.grid.paddingX}px`,
+                                                alignItems: wrap ? "flex-start" : "center",
                                                 fontFamily: style.body.fontFamily,
                                                 fontSize: style.body.fontSize,
                                                 fontWeight: style.body.bold ? 700 : 400,

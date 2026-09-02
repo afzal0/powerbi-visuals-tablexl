@@ -132,8 +132,10 @@ body {
     position: relative;
     overflow: hidden;
     flex: 0 0 auto;
-    height: 100%;
     min-height: 30px;
+    /* No fixed height: a wrapped label sets the header row's height. */
+    padding-top: 3px;
+    padding-bottom: 3px;
 }
 
 .txl-th-label {
@@ -141,11 +143,14 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
     flex: 0 1 auto;
+    min-width: 0;
 
+    /* Wrapped headers grow to fit; the header row stretches with them. */
     &.is-wrapped {
         white-space: normal;
         line-height: 1.25;
-        max-height: 2.5em;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     &.is-sortable {
@@ -222,6 +227,8 @@ body {
 .txl-tr {
     display: flex;
     cursor: default;
+    overflow: hidden;
+    align-items: stretch;
 
     &:hover {
         filter: brightness(0.97);
@@ -239,14 +246,15 @@ body {
     position: relative;
     overflow: hidden;
     flex: 0 0 auto;
-    height: 100%;
     white-space: nowrap;
     text-overflow: ellipsis;
 
+    /* A wrapped cell grows with its content instead of clipping it. */
     &.is-wrapped {
         white-space: normal;
         line-height: 1.3;
-        align-items: center;
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 }
 
@@ -256,6 +264,12 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: inherit;
+    min-width: 0;
+
+    .is-wrapped & {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
 }
 
 /* Data bars sit behind the value so the number stays readable. */
