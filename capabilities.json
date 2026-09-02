@@ -1,0 +1,798 @@
+{
+    "privileges": [
+        {
+            "name": "ExportContent",
+            "essential": false
+        }
+    ],
+    "supportsLandingPage": true,
+    "supportsMultiVisualSelection": true,
+    "supportsKeyboardFocus": true,
+    "supportsHighlight": false,
+    "sorting": {
+        "custom": {}
+    },
+    "tooltips": {
+        "supportedTypes": {
+            "default": true,
+            "canvas": true
+        },
+        "roles": [
+            "columns"
+        ]
+    },
+    "dataRoles": [
+        {
+            "displayName": "Columns",
+            "description": "Fields to show as table columns. Accepts both grouping fields and measures.",
+            "name": "columns",
+            "kind": "GroupingOrMeasure"
+        }
+    ],
+    "dataViewMappings": [
+        {
+            "table": {
+                "rows": {
+                    "for": {
+                        "in": "columns"
+                    },
+                    "dataReductionAlgorithm": {
+                        "top": {
+                            "count": 30000
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "objects": {
+        "general": {
+            "properties": {
+                "filter": {
+                    "type": {
+                        "filter": true
+                    }
+                },
+                "savedState": {
+                    "type": {
+                        "text": true
+                    }
+                }
+            }
+        },
+        "header": {
+            "displayName": "Column headers",
+            "properties": {
+                "fontFamily": {
+                    "displayName": "Font",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fontSize": {
+                    "displayName": "Text size",
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "bold": {
+                    "displayName": "Bold",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "displayName": "Italic",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "underline": {
+                    "displayName": "Underline",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontColor": {
+                    "displayName": "Text color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "backColor": {
+                    "displayName": "Background color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "alignment": {
+                    "displayName": "Alignment",
+                    "type": {
+                        "enumeration": [
+                            { "value": "auto", "displayName": "Match column" },
+                            { "value": "left", "displayName": "Left" },
+                            { "value": "center", "displayName": "Center" },
+                            { "value": "right", "displayName": "Right" }
+                        ]
+                    }
+                },
+                "wrapText": {
+                    "displayName": "Wrap text",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "sticky": {
+                    "displayName": "Freeze header row",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showBorder": {
+                    "displayName": "Bottom border",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "borderColor": {
+                    "displayName": "Border color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "borderWidth": {
+                    "displayName": "Border width",
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "values": {
+            "displayName": "Values",
+            "properties": {
+                "fontFamily": {
+                    "displayName": "Font",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
+                "fontSize": {
+                    "displayName": "Text size",
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "bold": {
+                    "displayName": "Bold",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "italic": {
+                    "displayName": "Italic",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontColor": {
+                    "displayName": "Text color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "backColor": {
+                    "displayName": "Background color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "banded": {
+                    "displayName": "Alternate row colors",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "bandedBackColor": {
+                    "displayName": "Alternate background",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "bandedFontColor": {
+                    "displayName": "Alternate text color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "density": {
+                    "displayName": "Row density",
+                    "type": {
+                        "enumeration": [
+                            { "value": "compact", "displayName": "Compact" },
+                            { "value": "normal", "displayName": "Normal" },
+                            { "value": "comfortable", "displayName": "Comfortable" }
+                        ]
+                    }
+                },
+                "rowHeight": {
+                    "displayName": "Row height (px)",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "wrapText": {
+                    "displayName": "Wrap text",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "selectionColor": {
+                    "displayName": "Selected row color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "showRowNumbers": {
+                    "displayName": "Show row numbers",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "grid": {
+            "displayName": "Gridlines",
+            "properties": {
+                "showHorizontal": {
+                    "displayName": "Horizontal gridlines",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showVertical": {
+                    "displayName": "Vertical gridlines",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "gridColor": {
+                    "displayName": "Gridline color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "gridWidth": {
+                    "displayName": "Gridline width",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "outline": {
+                    "displayName": "Outline",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "outlineColor": {
+                    "displayName": "Outline color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "paddingX": {
+                    "displayName": "Horizontal cell padding",
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "filtering": {
+            "displayName": "Column filters",
+            "properties": {
+                "enabled": {
+                    "displayName": "Enable filter buttons",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "scope": {
+                    "displayName": "Filter scope",
+                    "type": {
+                        "enumeration": [
+                            { "value": "local", "displayName": "This visual only" },
+                            { "value": "cross", "displayName": "Whole report page" }
+                        ]
+                    }
+                },
+                "showSearch": {
+                    "displayName": "Search box in filter menu",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showConditions": {
+                    "displayName": "Condition filters",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "indicatorColor": {
+                    "displayName": "Active filter color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "enableSorting": {
+                    "displayName": "Enable column sorting",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "totals": {
+            "displayName": "Totals row",
+            "properties": {
+                "show": {
+                    "displayName": "Show totals",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "label": {
+                    "displayName": "Label",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "fontColor": {
+                    "displayName": "Text color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "backColor": {
+                    "displayName": "Background color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "bold": {
+                    "displayName": "Bold",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "aggregation": {
+                    "displayName": "Aggregation",
+                    "type": {
+                        "enumeration": [
+                            { "value": "none", "displayName": "None" },
+                            { "value": "sum", "displayName": "Sum" },
+                            { "value": "avg", "displayName": "Average" },
+                            { "value": "min", "displayName": "Minimum" },
+                            { "value": "max", "displayName": "Maximum" },
+                            { "value": "count", "displayName": "Count" },
+                            { "value": "countDistinct", "displayName": "Count (distinct)" }
+                        ]
+                    }
+                }
+            }
+        },
+        "columnFormatting": {
+            "displayName": "Specific column",
+            "properties": {
+                "hide": {
+                    "displayName": "Hide column",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "width": {
+                    "displayName": "Width (px)",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "alignment": {
+                    "displayName": "Alignment",
+                    "type": {
+                        "enumeration": [
+                            { "value": "auto", "displayName": "Automatic" },
+                            { "value": "left", "displayName": "Left" },
+                            { "value": "center", "displayName": "Center" },
+                            { "value": "right", "displayName": "Right" }
+                        ]
+                    }
+                },
+                "displayUnits": {
+                    "displayName": "Display units",
+                    "type": {
+                        "formatting": {
+                            "labelDisplayUnits": true
+                        }
+                    }
+                },
+                "decimalPlaces": {
+                    "displayName": "Decimal places",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "wrapText": {
+                    "displayName": "Wrap text",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fontColor": {
+                    "displayName": "Text color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "backColor": {
+                    "displayName": "Background color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "conditionalFormatting": {
+            "displayName": "Conditional formatting",
+            "properties": {
+                "mode": {
+                    "displayName": "Format by",
+                    "type": {
+                        "enumeration": [
+                            { "value": "none", "displayName": "None" },
+                            { "value": "colorScale", "displayName": "Color scale" },
+                            { "value": "dataBar", "displayName": "Data bars" },
+                            { "value": "rules", "displayName": "Rules" }
+                        ]
+                    }
+                },
+                "target": {
+                    "displayName": "Apply to",
+                    "type": {
+                        "enumeration": [
+                            { "value": "background", "displayName": "Background color" },
+                            { "value": "font", "displayName": "Font color" }
+                        ]
+                    }
+                },
+                "minColor": {
+                    "displayName": "Minimum color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "useMid": {
+                    "displayName": "Add middle color",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "midColor": {
+                    "displayName": "Center color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "maxColor": {
+                    "displayName": "Maximum color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "dataBarColor": {
+                    "displayName": "Positive bar color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "dataBarNegativeColor": {
+                    "displayName": "Negative bar color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "dataBarShowValue": {
+                    "displayName": "Show value with bar",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "rule1Op": {
+                    "displayName": "Rule 1 condition",
+                    "type": {
+                        "enumeration": [
+                            { "value": "none", "displayName": "Off" },
+                            { "value": "eq", "displayName": "is" },
+                            { "value": "ne", "displayName": "is not" },
+                            { "value": "gt", "displayName": "is greater than" },
+                            { "value": "gte", "displayName": "is greater than or equal to" },
+                            { "value": "lt", "displayName": "is less than" },
+                            { "value": "lte", "displayName": "is less than or equal to" },
+                            { "value": "contains", "displayName": "contains" },
+                            { "value": "startsWith", "displayName": "starts with" },
+                            { "value": "isBlank", "displayName": "is blank" }
+                        ]
+                    }
+                },
+                "rule1Value": {
+                    "displayName": "Rule 1 value",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "rule1Color": {
+                    "displayName": "Rule 1 color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "rule2Op": {
+                    "displayName": "Rule 2 condition",
+                    "type": {
+                        "enumeration": [
+                            { "value": "none", "displayName": "Off" },
+                            { "value": "eq", "displayName": "is" },
+                            { "value": "ne", "displayName": "is not" },
+                            { "value": "gt", "displayName": "is greater than" },
+                            { "value": "gte", "displayName": "is greater than or equal to" },
+                            { "value": "lt", "displayName": "is less than" },
+                            { "value": "lte", "displayName": "is less than or equal to" },
+                            { "value": "contains", "displayName": "contains" },
+                            { "value": "startsWith", "displayName": "starts with" },
+                            { "value": "isBlank", "displayName": "is blank" }
+                        ]
+                    }
+                },
+                "rule2Value": {
+                    "displayName": "Rule 2 value",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "rule2Color": {
+                    "displayName": "Rule 2 color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "rule3Op": {
+                    "displayName": "Rule 3 condition",
+                    "type": {
+                        "enumeration": [
+                            { "value": "none", "displayName": "Off" },
+                            { "value": "eq", "displayName": "is" },
+                            { "value": "ne", "displayName": "is not" },
+                            { "value": "gt", "displayName": "is greater than" },
+                            { "value": "gte", "displayName": "is greater than or equal to" },
+                            { "value": "lt", "displayName": "is less than" },
+                            { "value": "lte", "displayName": "is less than or equal to" },
+                            { "value": "contains", "displayName": "contains" },
+                            { "value": "startsWith", "displayName": "starts with" },
+                            { "value": "isBlank", "displayName": "is blank" }
+                        ]
+                    }
+                },
+                "rule3Value": {
+                    "displayName": "Rule 3 value",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "rule3Color": {
+                    "displayName": "Rule 3 color",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "exportSettings": {
+            "displayName": "Export & print",
+            "properties": {
+                "showToolbar": {
+                    "displayName": "Show toolbar",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "enableCsv": {
+                    "displayName": "CSV",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "enableXlsx": {
+                    "displayName": "Excel (.xlsx)",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "enablePdf": {
+                    "displayName": "PDF / print",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fileName": {
+                    "displayName": "File name",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "pdfTitle": {
+                    "displayName": "PDF title",
+                    "type": {
+                        "text": true
+                    }
+                },
+                "pdfOrientation": {
+                    "displayName": "Orientation",
+                    "type": {
+                        "enumeration": [
+                            { "value": "portrait", "displayName": "Portrait" },
+                            { "value": "landscape", "displayName": "Landscape" },
+                            { "value": "auto", "displayName": "Automatic" }
+                        ]
+                    }
+                },
+                "pdfPageSize": {
+                    "displayName": "Page size",
+                    "type": {
+                        "enumeration": [
+                            { "value": "a4", "displayName": "A4" },
+                            { "value": "letter", "displayName": "Letter" },
+                            { "value": "legal", "displayName": "Legal" },
+                            { "value": "a3", "displayName": "A3" }
+                        ]
+                    }
+                },
+                "pdfFitToWidth": {
+                    "displayName": "Fit table to page width",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "pdfRepeatHeader": {
+                    "displayName": "Repeat header on every page",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "pdfPageNumbers": {
+                    "displayName": "Page numbers",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "xlsxAutoFilter": {
+                    "displayName": "Excel AutoFilter",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "xlsxFreezeHeader": {
+                    "displayName": "Freeze header in Excel",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "rawValues": {
+                    "displayName": "Export raw values",
+                    "description": "Export underlying values instead of the displayed formatted text.",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        }
+    }
+}

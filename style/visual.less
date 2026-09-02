@@ -1,0 +1,519 @@
+@font-stack: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+@border: #C8C6C4;
+@surface: #FFFFFF;
+@muted: #605E5C;
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.txl-root {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: @font-stack;
+    font-size: 12px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ---------- Toolbar ---------- */
+
+.txl-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    flex: 0 0 auto;
+    min-height: 30px;
+}
+
+.txl-spacer {
+    flex: 1 1 auto;
+}
+
+.txl-btn {
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 18px;
+    padding: 2px 10px;
+    border: 1px solid @border;
+    border-radius: 2px;
+    background: @surface;
+    color: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+        background: #F3F2F1;
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: default;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0078D4;
+        outline-offset: 1px;
+    }
+}
+
+.txl-btn-primary {
+    background: #0078D4;
+    border-color: #0078D4;
+    color: #FFFFFF;
+
+    &:hover:not(:disabled) {
+        background: #106EBE;
+    }
+}
+
+.txl-count,
+.txl-status,
+.txl-warn {
+    font-size: 11px;
+    color: @muted;
+    white-space: nowrap;
+}
+
+.txl-warn {
+    color: #8A6100;
+    background: #FFF4CE;
+    border-radius: 2px;
+    padding: 1px 6px;
+}
+
+.txl-status {
+    color: #A4262C;
+}
+
+/* ---------- Grid ---------- */
+
+.txl-scroll {
+    flex: 1 1 auto;
+    overflow: auto;
+    position: relative;
+    outline: none;
+
+    &:focus-visible {
+        outline: 2px solid #0078D4;
+        outline-offset: -2px;
+    }
+}
+
+.txl-table {
+    position: relative;
+    min-width: 100%;
+}
+
+.txl-head {
+    display: flex;
+    z-index: 3;
+
+    &.is-sticky {
+        position: sticky;
+        top: 0;
+    }
+}
+
+.txl-th {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    position: relative;
+    overflow: hidden;
+    flex: 0 0 auto;
+    height: 100%;
+    min-height: 30px;
+}
+
+.txl-th-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 0 1 auto;
+
+    &.is-wrapped {
+        white-space: normal;
+        line-height: 1.25;
+        max-height: 2.5em;
+    }
+
+    &.is-sortable {
+        cursor: pointer;
+
+        &:hover {
+            text-decoration: underline;
+        }
+
+        &:focus-visible {
+            outline: 2px solid currentColor;
+            outline-offset: 1px;
+        }
+    }
+}
+
+.txl-sort {
+    font-size: 8px;
+    flex: 0 0 auto;
+    opacity: 0.85;
+}
+
+.txl-sort-order {
+    font-size: 8px;
+    margin-left: 1px;
+    vertical-align: super;
+}
+
+.txl-filter-btn {
+    font-family: inherit;
+    font-size: 8px;
+    line-height: 1;
+    padding: 3px 3px;
+    margin-left: auto;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.55;
+    flex: 0 0 auto;
+
+    &:hover,
+    &.is-open,
+    &.is-active {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.08);
+    }
+
+    &:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 1px;
+        opacity: 1;
+    }
+}
+
+.txl-resize {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    height: 100%;
+    cursor: col-resize;
+
+    &:hover {
+        background: rgba(0, 120, 212, 0.4);
+    }
+}
+
+.txl-body {
+    width: 100%;
+}
+
+.txl-tr {
+    display: flex;
+    cursor: default;
+
+    &:hover {
+        filter: brightness(0.97);
+    }
+
+    &.is-focused {
+        outline: 1px solid #0078D4;
+        outline-offset: -1px;
+    }
+}
+
+.txl-td {
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    flex: 0 0 auto;
+    height: 100%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &.is-wrapped {
+        white-space: normal;
+        line-height: 1.3;
+        align-items: center;
+    }
+}
+
+.txl-cell-text {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: inherit;
+}
+
+/* Data bars sit behind the value so the number stays readable. */
+.txl-databar {
+    position: absolute;
+    top: 15%;
+    height: 70%;
+    z-index: 0;
+    border-radius: 2px;
+    opacity: 0.85;
+}
+
+.txl-rownum,
+.txl-rownum-head {
+    color: @muted;
+    font-size: 11px;
+    justify-content: flex-end;
+}
+
+.txl-totals {
+    display: flex;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+}
+
+/* ---------- Filter popover ---------- */
+
+.txl-popover {
+    position: absolute;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    background: @surface;
+    color: #252423;
+    border: 1px solid @border;
+    border-radius: 3px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    font-size: 12px;
+}
+
+.txl-popover-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #EDEBE9;
+    font-weight: 600;
+}
+
+.txl-popover-title {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.txl-icon-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 11px;
+    color: @muted;
+    padding: 2px 4px;
+    border-radius: 2px;
+
+    &:hover {
+        background: #F3F2F1;
+    }
+}
+
+.txl-popover-sort {
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    border-bottom: 1px solid #EDEBE9;
+}
+
+.txl-menu-btn {
+    text-align: left;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 2px;
+    cursor: pointer;
+    color: inherit;
+
+    &:hover {
+        background: #F3F2F1;
+    }
+
+    &.is-active {
+        font-weight: 600;
+        background: #EFF6FC;
+    }
+}
+
+.txl-popover-section {
+    padding: 6px 8px;
+    border-bottom: 1px solid #EDEBE9;
+}
+
+.txl-popover-values {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.txl-popover-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: @muted;
+    margin-bottom: 4px;
+}
+
+.txl-condition {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.txl-condition-and {
+    font-size: 11px;
+    color: @muted;
+}
+
+.txl-select,
+.txl-input {
+    font-family: inherit;
+    font-size: 12px;
+    padding: 3px 5px;
+    border: 1px solid @border;
+    border-radius: 2px;
+    background: @surface;
+    color: inherit;
+    width: 100%;
+
+    &:focus-visible {
+        outline: 2px solid #0078D4;
+        outline-offset: -1px;
+    }
+}
+
+.txl-search {
+    margin-bottom: 4px;
+}
+
+.txl-checklist {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.txl-checklist-scroll {
+    overflow: auto;
+    border: 1px solid #EDEBE9;
+    border-radius: 2px;
+}
+
+.txl-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 6px;
+    cursor: pointer;
+    font-size: 12px;
+
+    input {
+        flex: 0 0 auto;
+        margin: 0;
+    }
+
+    &:hover {
+        background: #F3F2F1;
+    }
+}
+
+.txl-check-all {
+    height: 24px;
+    font-weight: 600;
+    border-bottom: 1px solid #EDEBE9;
+    margin-bottom: 2px;
+}
+
+.txl-check-label {
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.txl-check-count {
+    flex: 0 0 auto;
+    font-size: 10px;
+    color: @muted;
+}
+
+.txl-empty {
+    padding: 12px;
+    text-align: center;
+    color: @muted;
+}
+
+.txl-note {
+    font-size: 10px;
+    color: @muted;
+    padding: 4px 0 0;
+    line-height: 1.3;
+}
+
+.txl-note-scope {
+    padding: 4px 8px;
+    background: #FFF4CE;
+    color: #8A6100;
+}
+
+.txl-popover-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+}
+
+/* ---------- Landing page ---------- */
+
+.txl-landing {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-family: @font-stack;
+}
+
+.txl-landing-inner {
+    max-width: 340px;
+    padding: 16px;
+}
+
+.txl-landing-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 6px;
+}
+
+.txl-landing-text {
+    font-size: 12px;
+    margin: 0 0 10px;
+}
+
+.txl-landing-list {
+    font-size: 12px;
+    margin: 0;
+    padding-left: 18px;
+    line-height: 1.6;
+    opacity: 0.85;
+}
