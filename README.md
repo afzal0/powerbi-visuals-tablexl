@@ -110,9 +110,30 @@ Per-column format-pane settings are read from each column's own metadata
 objects, because `populateFormattingSettingsModel` only hydrates visual-level
 objects. The per-column cards are therefore built in `getFormattingModel()`.
 
+## Marketplace assets and legal documents
+
+| | |
+| --- | --- |
+| Logo, screenshots, capture harness | [`marketing/`](marketing/) |
+| Privacy policy | [`PRIVACY.md`](PRIVACY.md) |
+| End user licence agreement | [`EULA.md`](EULA.md) |
+| Source licence | [`LICENSE`](LICENSE) — MIT |
+
+The screenshots are rendered by `marketing/shoot.sh` from the visual's own
+styling. See [`marketing/README.md`](marketing/README.md) for how to regenerate
+them, and for why they should be retaken from a real report before submission.
+
 ## Before publishing to AppSource
 
-- Replace the placeholder `supportUrl` and `gitHubUrl` in `pbiviz.json` with
-  real URLs.
-- Push the reviewed source to a lowercase `certification` branch that matches
-  the submitted package, then submit through Partner Center.
+Certification is optional — you can list on AppSource without it, and Microsoft
+recommends publishing first and requesting certification afterwards.
+
+Still outstanding:
+
+- A sample `.pbix` report that demonstrates the visual and works offline.
+- The two `[COMPLETE THIS]` governing-law fields in `EULA.md`, or select
+  Microsoft's standard contract in Partner Center instead.
+- Retake the screenshots from a real Power BI report.
+- A Partner Center developer account (identity verification takes several days).
+- For certification: push the reviewed source to a lowercase `certification`
+  branch matching the submitted package, then request it from the same offer.

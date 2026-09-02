@@ -1,0 +1,427 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>AppSource screenshot harness</title>
+<!--
+  Renders the visual inside a Power BI-style report page at exactly 1366x768,
+  the size AppSource requires. Each scene is a different feature, captured with
+  headless Chrome by marketing/shoot.sh.
+-->
+<style>
+  html, body { margin: 0; padding: 0; width: 1366px; height: 768px; overflow: hidden; }
+  body {
+    background: #F2F3F5;
+    font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- report page chrome ---- */
+  .page { width: 1366px; height: 768px; position: relative; display: flex; flex-direction: column; }
+  .ribbon {
+    height: 44px; background: #FFFFFF; border-bottom: 1px solid #E1DFDD;
+    display: flex; align-items: center; gap: 12px; padding: 0 18px; flex: 0 0 auto;
+  }
+  .ribbon .mark { width: 18px; height: 18px; border-radius: 4px; background: #F2B01E; }
+  .ribbon .name { font-size: 14px; font-weight: 600; color: #252423; }
+  .ribbon .crumb { font-size: 12px; color: #8A8886; }
+  .ribbon .grow { flex: 1 1 auto; }
+  .ribbon .pill {
+    font-size: 11px; color: #605E5C; border: 1px solid #E1DFDD;
+    border-radius: 12px; padding: 2px 10px; background: #FAF9F8;
+  }
+  .canvas { flex: 1 1 auto; padding: 18px; position: relative; }
+
+  .tile {
+    position: absolute; inset: 18px; background: #FFFFFF;
+    border: 1px solid #E1DFDD; border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    display: flex; flex-direction: column; overflow: hidden;
+    font-size: 12px; color: #252423;
+  }
+
+  /* ---- the visual (mirrors style/visual.less) ---- */
+  .txl-toolbar {
+    display: flex; align-items: center; gap: 6px; padding: 5px 7px;
+    min-height: 32px; background: #F3F2F1; border-bottom: 1px solid #E1DFDD; flex: 0 0 auto;
+  }
+  .txl-btn {
+    font: inherit; font-size: 11px; line-height: 18px; padding: 2px 10px;
+    border: 1px solid #C8C6C4; border-radius: 2px; background: #fff; color: #252423;
+  }
+  .txl-btn-primary { background: #0078D4; border-color: #0078D4; color: #fff; }
+  .txl-spacer { flex: 1 1 auto; }
+  .txl-count { font-size: 11px; color: #605E5C; }
+  .txl-chip { font-size: 11px; background: #EFF6FC; color: #005A9E; border-radius: 2px; padding: 1px 7px; }
+
+  .txl-scroll { flex: 1 1 auto; overflow: hidden; position: relative; }
+  .txl-head { display: flex; background: #F3F2F1; }
+  .txl-th {
+    display: flex; align-items: center; gap: 3px; position: relative; overflow: hidden;
+    min-height: 32px; padding: 3px 8px; font-weight: 700;
+    background: #F3F2F1; border-bottom: 1px solid #C8C6C4; border-right: 1px solid #E1DFDD;
+  }
+  .txl-th.num { justify-content: flex-end; }
+  .txl-th-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .txl-sort { font-size: 8px; opacity: .85; }
+  .txl-sort-order { font-size: 8px; vertical-align: super; margin-left: 1px; }
+  .txl-filter-btn {
+    font-size: 8px; margin-left: auto; border: none; background: transparent;
+    color: #252423; opacity: .5; padding: 4px 3px; border-radius: 2px;
+  }
+  .txl-filter-btn.on { opacity: 1; color: #0078D4; }
+  .txl-filter-btn.open { opacity: 1; background: rgba(0,0,0,.08); }
+
+  .txl-tr { display: flex; overflow: hidden; align-items: stretch; border-bottom: 1px solid #E1DFDD; }
+  .txl-td {
+    display: flex; align-items: center; position: relative; overflow: hidden;
+    padding: 0 8px; border-right: 1px solid #E1DFDD; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .txl-td.num { justify-content: flex-end; font-variant-numeric: tabular-nums; }
+  .txl-td.wrap {
+    white-space: normal; line-height: 1.3; align-items: flex-start;
+    padding: 5px 8px; overflow-wrap: anywhere; word-break: break-word;
+  }
+  .txl-cell-text { position: relative; z-index: 1; overflow: hidden; text-overflow: ellipsis; white-space: inherit; }
+  .txl-databar { position: absolute; top: 15%; height: 70%; z-index: 0; border-radius: 2px; opacity: .85; }
+  .txl-rownum { color: #605E5C; font-size: 11px; justify-content: flex-end; }
+  .txl-totals { display: flex; background: #F3F2F1; font-weight: 700; border-top: 1px solid #C8C6C4; }
+
+  /* ---- filter popover ---- */
+  .pop {
+    position: absolute; z-index: 20; width: 258px; background: #fff; color: #252423;
+    border: 1px solid #C8C6C4; border-radius: 3px;
+    box-shadow: 0 4px 18px rgba(0,0,0,.22); overflow: hidden; font-size: 12px;
+  }
+  .pop-head { display: flex; align-items: center; padding: 6px 8px; border-bottom: 1px solid #EDEBE9; font-weight: 600; }
+  .pop-head .x { margin-left: auto; color: #605E5C; font-size: 11px; }
+  .pop-sort { display: flex; flex-direction: column; padding: 4px; border-bottom: 1px solid #EDEBE9; }
+  .pop-sort div { padding: 5px 8px; border-radius: 2px; }
+  .pop-sort div.on { background: #EFF6FC; font-weight: 600; }
+  .pop-sec { padding: 6px 8px; border-bottom: 1px solid #EDEBE9; }
+  .pop-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: #605E5C; margin-bottom: 4px; }
+  .pop-in {
+    border: 1px solid #C8C6C4; border-radius: 2px; padding: 3px 6px;
+    font-size: 12px; color: #252423; background: #fff; margin-bottom: 4px;
+  }
+  .pop-in.muted { color: #8A8886; }
+  .pop-list { border: 1px solid #EDEBE9; border-radius: 2px; }
+  .pop-row { display: flex; align-items: center; gap: 6px; height: 24px; padding: 0 6px; }
+  .pop-row.head { font-weight: 600; border-bottom: 1px solid #EDEBE9; }
+  .pop-row .cnt { margin-left: auto; font-size: 10px; color: #605E5C; }
+  .box {
+    width: 12px; height: 12px; border: 1px solid #605E5C; border-radius: 2px;
+    background: #fff; position: relative; flex: 0 0 auto;
+  }
+  .box.on { background: #0078D4; border-color: #0078D4; }
+  .box.on::after {
+    content: ""; position: absolute; left: 3px; top: 0px; width: 4px; height: 8px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
+  .pop-note { font-size: 10px; padding: 5px 8px; background: #FFF4CE; color: #8A6100; line-height: 1.35; }
+  .pop-act { display: flex; gap: 6px; align-items: center; padding: 6px 8px; }
+
+  /* ---- PDF preview ---- */
+  .sheet {
+    position: absolute; background: #fff; box-shadow: 0 8px 30px rgba(0,0,0,.3);
+    border: 1px solid #D8D8D8; padding: 16px; font-size: 7px; color: #252423;
+  }
+  .sheet h4 { font-size: 11px; margin: 0 0 7px; font-weight: 600; }
+  .sheet table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .sheet th, .sheet td { border: .5px solid #E1DFDD; padding: 2px 3px; text-align: left; overflow: hidden; white-space: nowrap; }
+  .sheet th { background: #F3F2F1; font-weight: 700; }
+  .sheet tr.b td { background: #FAF9F8; }
+  .sheet td.n, .sheet th.n { text-align: right; }
+  .sheet .pg { position: absolute; right: 16px; bottom: 8px; font-size: 6px; color: #888; }
+
+  /* ---- callout ---- */
+  .callout {
+    position: absolute; z-index: 40; max-width: 330px;
+    background: #131A22; color: #F4F6F8; border-radius: 10px;
+    padding: 13px 16px; box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  }
+  .callout h3 { margin: 0 0 5px; font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+  .callout p { margin: 0; font-size: 12.5px; line-height: 1.45; color: #B9C3CF; }
+  .callout::after {
+    content: ""; position: absolute; width: 0; height: 0; border: 9px solid transparent;
+  }
+  .callout.down::after { bottom: -17px; left: 34px; border-top-color: #131A22; }
+  .callout.up::after   { top: -17px; left: 34px; border-bottom-color: #131A22; }
+  .callout.left::after { left: -17px; top: 22px; border-right-color: #131A22; }
+  .callout.right::after{ right: -17px; top: 22px; border-left-color: #131A22; }
+</style>
+
+<div class="page">
+  <div class="ribbon">
+    <span class="mark"></span>
+    <span class="name">Regional Sales</span>
+    <span class="crumb">/ Orders</span>
+    <span class="grow"></span>
+    <span class="pill">FY 2024</span>
+    <span class="pill">All regions</span>
+  </div>
+  <div class="canvas"><div class="tile" id="tile"></div></div>
+</div>
+
+<script>
+/* ---------------- sample data ---------------- */
+const D = (y,m,d) => new Date(y, m-1, d);
+const COLS = [
+  { key:"product", name:"Product",          kind:"text",   w:170 },
+  { key:"region",  name:"Region",           kind:"text",   w:96  },
+  { key:"status",  name:"Status",           kind:"text",   w:110 },
+  { key:"date",    name:"Order date",       kind:"date",   w:108 },
+  { key:"units",   name:"Units",            kind:"number", w:80  },
+  { key:"revenue", name:"Revenue",          kind:"number", w:122 },
+  { key:"margin",  name:"Margin",           kind:"number", w:92  },
+  { key:"notes",   name:"Fulfilment notes", kind:"text",   w:250 }
+];
+const NOTES = [
+  "Expedited freight approved by the regional account manager",
+  "Partial shipment — remaining units follow next week",
+  "Customer requested consolidated delivery with order 88214",
+  "Held at customs pending revised commercial invoice",
+  "",
+  "Substituted with the Rev B chassis at no additional cost",
+  "Awaiting signed delivery confirmation from the site contact"
+];
+const RAW = [
+  ["Aurora Sensor","North","Shipped",D(2024,1,8),120,48200,.34],
+  ["Aurora Sensor","South","Shipped",D(2024,1,22),85,34150,.31],
+  ["Aurora Sensor","East","Returned",D(2024,2,3),-12,-4820,-.08],
+  ["Beacon Gateway","West","Shipped",D(2024,1,15),40,91000,.42],
+  ["Beacon Gateway","North","Pending",D(2024,3,2),22,50050,.40],
+  ["Beacon Gateway","South","Shipped",D(2024,2,19),31,70525,.39],
+  ["Cinder Relay","East","Shipped",D(2024,2,11),210,31500,.18],
+  ["Cinder Relay","West","Backordered",D(2024,4,5),180,27000,.17],
+  ["Cinder Relay",null,"Shipped",D(2024,3,28),95,14250,.16],
+  ["Delta Hub","North","Shipped",D(2024,1,30),64,128000,.45],
+  ["Delta Hub","East","Shipped",D(2024,3,14),48,96000,.44],
+  ["Delta Hub","South","Pending",D(2024,5,6),29,58000,.43],
+  ["Echo Meter","West","Shipped",D(2024,2,26),340,20400,.11],
+  ["Echo Meter","North","Returned",D(2024,4,18),-28,-1680,-.05],
+  ["Fathom Probe","East","Shipped",D(2024,1,11),17,40800,.37],
+  ["Fathom Probe","West","Shipped",D(2024,3,7),23,55200,.38],
+  ["Grove Controller","South","Shipped",D(2024,2,14),72,64800,.29],
+  ["Harbor Switch","West","Shipped",D(2024,1,19),150,37500,.22],
+  ["Ion Bridge","East","Shipped",D(2024,2,6),58,81200,.41],
+  ["Kestrel Array","North","Shipped",D(2024,2,2),26,104000,.46],
+  ["Lumen Panel","West","Shipped",D(2024,1,5),410,32800,.19],
+  ["Meridian Stack","East","Shipped",D(2024,2,23),33,115500,.47]
+];
+const ROWS = RAW.map((r,i) => ({
+  product:r[0], region:r[1], status:r[2], date:r[3],
+  units:r[4], revenue:r[5], margin:r[6], notes: NOTES[i % NOTES.length] || null
+}));
+
+const nInt = new Intl.NumberFormat("en-US");
+const nMon = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
+const nPct = new Intl.NumberFormat("en-US",{style:"percent",minimumFractionDigits:1,maximumFractionDigits:1});
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function fmt(col, v) {
+  if (v === null || v === undefined) return "";
+  if (col.kind === "date") return v.getFullYear()+"-"+String(v.getMonth()+1).padStart(2,"0")+"-"+String(v.getDate()).padStart(2,"0");
+  if (col.kind === "number") return col.key==="revenue" ? nMon.format(v) : col.key==="margin" ? nPct.format(v) : nInt.format(v);
+  return String(v);
+}
+
+/* ---------------- conditional formatting ---------------- */
+const hex = c => { let h=c.replace("#",""); if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; };
+const mix = (a,b,t) => { const A=hex(a),B=hex(b),k=Math.max(0,Math.min(1,t));
+  return "#"+[0,1,2].map(i=>Math.round(A[i]+(B[i]-A[i])*k).toString(16).padStart(2,"0")).join(""); };
+const contrast = c => { const [r,g,b]=hex(c); return (0.299*r+0.587*g+0.114*b)/255 > .6 ? "#000" : "#fff"; };
+
+function stats(rows, key) {
+  const n = rows.map(r=>r[key]).filter(v=>typeof v==="number");
+  return n.length ? {min:Math.min(...n), max:Math.max(...n)} : null;
+}
+
+/* ---------------- renderer ---------------- */
+// Inner width of the tile: 1366 - canvas padding (36) - tile border (2).
+const TILE_W = 1328;
+
+function render(cfg) {
+  let cols = COLS.filter(c => cfg.columns.includes(c.key))
+                 .map(c => ({ ...c, w: (cfg.widths || {})[c.key] || c.w }));
+  // Scale the columns so the table fills the tile, as it would once sized.
+  const avail = TILE_W - (cfg.rowNumbers ? 46 : 0);
+  const natural = cols.reduce((a, c) => a + c.w, 0);
+  const k = avail / natural;
+  cols = cols.map(c => ({ ...c, w: Math.floor(c.w * k) }));
+  let rows = ROWS.slice();
+  if (cfg.filter) rows = rows.filter(cfg.filter);
+  if (cfg.sort) rows.sort(cfg.sort);
+  rows = rows.slice(0, cfg.limit || 14);
+
+  const st = { revenue: stats(rows,"revenue"), margin: stats(rows,"margin") };
+  const rowH = cfg.rowHeight || 30;
+
+  let html = `<div class="txl-toolbar">
+    <button class="txl-btn">CSV</button><button class="txl-btn">Excel</button><button class="txl-btn">PDF</button>
+    ${cfg.filterCount ? '<button class="txl-btn">Clear filters</button>' : ""}
+    <span class="txl-spacer"></span>
+    ${cfg.scopeChip ? `<span class="txl-chip">${esc(cfg.scopeChip)}</span>` : ""}
+    <span class="txl-count">${cfg.countLabel || nInt.format(rows.length)+" rows"}</span>
+  </div><div class="txl-scroll"><div style="min-width:100%">`;
+
+  // header
+  html += `<div class="txl-head">`;
+  if (cfg.rowNumbers) html += `<div class="txl-th" style="width:46px"></div>`;
+  for (const c of cols) {
+    const s = (cfg.sortMarks||{})[c.key];
+    html += `<div class="txl-th${c.kind==="number"?" num":""}" style="width:${c.w}px">
+      <span class="txl-th-label">${esc(c.name)}</span>
+      ${s ? `<span class="txl-sort">${s.dir==="asc"?"▲":"▼"}${s.order?`<span class="txl-sort-order">${s.order}</span>`:""}</span>` : ""}
+      <button class="txl-filter-btn${(cfg.filtered||[]).includes(c.key)?" on":""}${cfg.openFilter===c.key?" open":""}">${(cfg.filtered||[]).includes(c.key)?"▼*":"▼"}</button>
+    </div>`;
+  }
+  html += `</div>`;
+
+  // body
+  rows.forEach((r,i) => {
+    const band = i % 2 === 1;
+    html += `<div class="txl-tr" style="min-height:${rowH}px;background:${band?"#FAF9F8":"#fff"}">`;
+    if (cfg.rowNumbers) html += `<div class="txl-td txl-rownum" style="width:46px">${i+1}</div>`;
+    for (const c of cols) {
+      const raw = r[c.key], text = fmt(c, raw);
+      let bg = "", fg = "", bar = "";
+      const mode = (cfg.cf||{})[c.key];
+      if (mode === "dataBar" && typeof raw === "number" && st[c.key]) {
+        const s = st[c.key], lo = Math.min(s.min,0), hi = Math.max(s.max,0), span = hi-lo;
+        if (span > 0) {
+          const axis = (-lo/span)*100;
+          const w = Math.abs(raw)/span*100;
+          const left = raw >= 0 ? axis : axis - w;
+          bar = `<span class="txl-databar" style="left:${left}%;width:${w}%;background:${raw>=0?"#4A90D9":"#D9534F"}"></span>`;
+        }
+      } else if (mode === "colorScale" && typeof raw === "number" && st[c.key]) {
+        const s = st[c.key], span = s.max - s.min;
+        bg = mix("#DEEBF7","#2E75B6", span===0?.5:(raw-s.min)/span);
+        fg = contrast(bg);
+      } else if (mode === "rules" && typeof raw === "number" && raw < 0) {
+        bg = "#F8C9C6"; fg = "#000";
+      }
+      const wrap = cfg.wrap && c.kind === "text" && c.key === "notes";
+      html += `<div class="txl-td${c.kind==="number"?" num":""}${wrap?" wrap":""}"
+        style="width:${c.w}px;${bg?`background:${bg};color:${fg};`:""}">${bar}<span class="txl-cell-text">${esc(text)}</span></div>`;
+    }
+    html += `</div>`;
+  });
+  html += `</div></div>`;
+
+  // totals
+  if (cfg.totals) {
+    html += `<div class="txl-totals" style="min-height:${rowH}px">`;
+    if (cfg.rowNumbers) html += `<div class="txl-td" style="width:46px"></div>`;
+    cols.forEach((c,i) => {
+      let t = i === 0 ? "Total" : "";
+      if (c.key === "units")   t = nInt.format(rows.reduce((a,r)=>a+r.units,0));
+      if (c.key === "revenue") t = nMon.format(rows.reduce((a,r)=>a+r.revenue,0));
+      if (c.key === "margin")  t = nPct.format(rows.reduce((a,r)=>a+r.margin,0)/rows.length);
+      html += `<div class="txl-td${c.kind==="number"?" num":""}" style="width:${c.w}px">${esc(t)}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  document.getElementById("tile").innerHTML = html;
+  if (cfg.after) cfg.after();
+}
+
+function callout(pos, dir, title, body) {
+  const d = document.createElement("div");
+  d.className = "callout " + dir;
+  Object.assign(d.style, pos);
+  d.innerHTML = `<h3>${esc(title)}</h3><p>${esc(body)}</p>`;
+  document.querySelector(".canvas").appendChild(d);
+}
+
+function popover(pos, html) {
+  const d = document.createElement("div");
+  d.className = "pop";
+  Object.assign(d.style, pos);
+  d.innerHTML = html;
+  document.getElementById("tile").appendChild(d);
+}
+
+/* ---------------- scenes ---------------- */
+const ALL = ["product","region","status","date","units","revenue","margin"];
+
+const SCENES = {
+  1: () => {
+    render({ columns: ALL, totals: true, cf: { revenue:"dataBar", margin:"colorScale" }, limit: 19 });
+    callout({ left:"690px", top:"330px" }, "left",
+      "A table that works like a spreadsheet",
+      "Filter and sort any column straight from its header. Nothing to set up, and no edit access needed.");
+  },
+
+  2: () => {
+    render({ columns: ALL, totals: true, cf: { revenue:"dataBar", margin:"colorScale" },
+             limit: 19, openFilter: "region", filtered: ["region"] });
+    const vals = [["North",4],["South",4],["East",5],["West",5],["(Blanks)",1]];
+    popover({ left:"176px", top:"70px" }, `
+      <div class="pop-head">Region <span class="x">✕</span></div>
+      <div class="pop-sort"><div class="on">Sort A → Z</div><div>Sort Z → A</div></div>
+      <div class="pop-sec"><div class="pop-lbl">Condition</div>
+        <div class="pop-in muted">(no condition)</div></div>
+      <div class="pop-sec"><div class="pop-lbl">Values</div>
+        <div class="pop-in muted">Search</div>
+        <div class="pop-list">
+          <div class="pop-row head"><span class="box on"></span><span>(Select all)</span></div>
+          ${vals.map(([n,c],i)=>`<div class="pop-row"><span class="box${i<3?" on":""}"></span><span>${n}</span><span class="cnt">${c}</span></div>`).join("")}
+        </div></div>
+      <div class="pop-act"><button class="txl-btn">Clear</button><span class="txl-spacer"></span>
+        <button class="txl-btn">Cancel</button><button class="txl-btn txl-btn-primary">Apply</button></div>`);
+    callout({ left:"470px", top:"250px" }, "left",
+      "Excel's filter menu, inside Power BI",
+      "A searchable value list with counts, plus conditions for text, numbers and dates. Each list reflects the other columns' filters, exactly like AutoFilter.");
+  },
+
+  3: () => {
+    render({
+      columns: ALL, totals: true, cf: { revenue:"dataBar" }, limit: 19,
+      filter: r => r.status === "Shipped",
+      sort: (a,b) => a.region === b.region ? b.revenue - a.revenue : (a.region||"~").localeCompare(b.region||"~"),
+      sortMarks: { region:{dir:"asc",order:1}, revenue:{dir:"desc",order:2} },
+      filtered: ["status"], filterCount: 1,
+      countLabel: "16 of 42 rows", scopeChip: "Page filtered by 1 column"
+    });
+    callout({ left:"430px", top:"120px" }, "up",
+      "Sort by several columns at once",
+      "Shift-click to add a column to the sort. Filters can stay inside the visual, or cross-filter the whole report page.");
+  },
+
+  4: () => {
+    render({ columns: ALL, totals: true, cf: { revenue:"dataBar", margin:"colorScale" }, limit: 19 });
+    const sheet = document.createElement("div");
+    sheet.className = "sheet";
+    Object.assign(sheet.style, { right:"40px", top:"70px", width:"330px", height:"466px" });
+    const sub = ROWS.slice(0,20);
+    sheet.innerHTML = `<h4>Regional sales — Q1</h4><table>
+      <tr><th>Product</th><th>Region</th><th class="n">Units</th><th class="n">Revenue</th></tr>
+      ${sub.map((r,i)=>`<tr class="${i%2?"b":""}"><td>${esc(r.product)}</td><td>${esc(r.region||"")}</td>
+        <td class="n">${nInt.format(r.units)}</td><td class="n">${nMon.format(r.revenue)}</td></tr>`).join("")}
+      </table><div class="pg">Page 1</div>`;
+    document.querySelector(".canvas").appendChild(sheet);
+    callout({ left:"60px", top:"430px" }, "right",
+      "Export exactly what you see",
+      "CSV, a styled Excel workbook with a frozen header and AutoFilter, or a paginated PDF that prints properly — always the filtered, sorted view.");
+  },
+
+  5: () => {
+    render({
+      columns: ["product","region","status","units","revenue","margin","notes"],
+      totals: true, rowNumbers: true, wrap: true, rowHeight: 30,
+      // A narrow notes column, so the wrapping is actually visible.
+      widths: { notes: 128, product: 150 },
+      cf: { revenue:"dataBar", margin:"colorScale" }, limit: 13
+    });
+    callout({ left:"330px", top:"120px" }, "up",
+      "Formatting the built-in table can't do",
+      "Data bars, colour scales and rules per column, a totals row with its own aggregation, wrapped text, row numbers and adjustable density.");
+  }
+};
+
+const scene = Number(new URLSearchParams(location.search).get("scene") || 1);
+(SCENES[scene] || SCENES[1])();
+document.title = "scene-" + scene;
+</script>

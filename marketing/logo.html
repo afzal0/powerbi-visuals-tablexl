@@ -1,0 +1,52 @@
+<!doctype html><meta charset="utf-8">
+<style>
+  html,body{margin:0;padding:0;background:transparent}
+  svg{display:block}
+</style>
+<!--
+  Marketplace logo. The subject is a spreadsheet you can filter, so the mark is
+  a table with its header carrying a funnel, and one column rendered as data
+  bars — the two things this visual does that the built-in table does not.
+-->
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="squircle"><rect x="0" y="0" width="300" height="300" rx="66" ry="66"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#squircle)">
+    <rect width="300" height="300" fill="#131A22"/>
+    <!-- a faint sheet edge, so the mark reads as paper on ink -->
+    <rect x="30" y="46" width="240" height="208" rx="10" fill="#1B242E"/>
+  </g>
+
+  <!-- header bar -->
+  <rect x="46" y="66" width="208" height="36" rx="7" fill="#F2B01E"/>
+  <!-- column labels -->
+  <rect x="60"  y="80" width="44" height="8" rx="4" fill="#131A22" opacity=".78"/>
+  <rect x="127" y="80" width="30" height="8" rx="4" fill="#131A22" opacity=".78"/>
+  <!-- funnel: the filter affordance, sitting in the header where it lives -->
+  <path d="M206 76 h34 a3 3 0 0 1 2.3 4.9L230 95v13.5a2.6 2.6 0 0 1-4 2.2l-7.4-4.6a2.6 2.6 0 0 1-1.2-2.2V95l-12.7-14.1A3 3 0 0 1 206 76z"
+        fill="#131A22"/>
+
+  <!-- body rows: two text columns and one column of data bars -->
+  <g>
+    <rect x="46"  y="112" width="70" height="26" rx="5" fill="#E4EAF0"/>
+    <rect x="121" y="112" width="58" height="26" rx="5" fill="#E4EAF0" opacity=".62"/>
+    <rect x="184" y="112" width="70" height="26" rx="5" fill="#243040"/>
+    <rect x="184" y="112" width="62" height="26" rx="5" fill="#F2B01E"/>
+
+    <rect x="46"  y="146" width="70" height="26" rx="5" fill="#E4EAF0"/>
+    <rect x="121" y="146" width="58" height="26" rx="5" fill="#E4EAF0" opacity=".62"/>
+    <rect x="184" y="146" width="70" height="26" rx="5" fill="#243040"/>
+    <rect x="184" y="146" width="34" height="26" rx="5" fill="#F2B01E"/>
+
+    <rect x="46"  y="180" width="70" height="26" rx="5" fill="#E4EAF0"/>
+    <rect x="121" y="180" width="58" height="26" rx="5" fill="#E4EAF0" opacity=".62"/>
+    <rect x="184" y="180" width="70" height="26" rx="5" fill="#243040"/>
+    <rect x="184" y="180" width="48" height="26" rx="5" fill="#F2B01E"/>
+
+    <!-- totals row, set apart -->
+    <rect x="46"  y="216" width="70" height="18" rx="4" fill="#8FA0B4" opacity=".55"/>
+    <rect x="184" y="216" width="70" height="18" rx="4" fill="#8FA0B4" opacity=".8"/>
+  </g>
+</svg>
