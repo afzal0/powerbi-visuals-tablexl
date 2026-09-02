@@ -319,6 +319,19 @@ body {
     padding: 6px 8px;
     border-bottom: 1px solid #EDEBE9;
     font-weight: 600;
+    flex: 0 0 auto;
+}
+
+/*
+ * Only the middle scrolls. The title and the Clear/Cancel/Apply row are pinned,
+ * so the buttons stay reachable no matter how little height the report gives
+ * the visual.
+ */
+.txl-popover-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .txl-popover-title {
@@ -347,6 +360,7 @@ body {
     flex-direction: column;
     padding: 4px;
     border-bottom: 1px solid #EDEBE9;
+    flex: 0 0 auto;
 }
 
 .txl-menu-btn {
@@ -375,10 +389,31 @@ body {
     border-bottom: 1px solid #EDEBE9;
 }
 
+/*
+ * In a small visual the stacked sort buttons crowd out the value list, which is
+ * what the menu is mostly for. Lay them out in a row instead.
+ */
+.txl-popover.is-compact {
+    .txl-popover-sort {
+        flex-direction: row;
+        gap: 4px;
+    }
+
+    .txl-menu-btn {
+        flex: 1 1 0;
+        text-align: center;
+        padding: 5px 4px;
+        border: 1px solid @border;
+        border-radius: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
 .txl-popover-values {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
+    /* The scrolling body owns the overflow now. */
+    flex: 0 0 auto;
 }
 
 .txl-popover-label {
@@ -485,6 +520,7 @@ body {
 }
 
 .txl-note-scope {
+    flex: 0 0 auto;
     padding: 4px 8px;
     background: #FFF4CE;
     color: #8A6100;
@@ -495,6 +531,9 @@ body {
     align-items: center;
     gap: 6px;
     padding: 6px 8px;
+    flex: 0 0 auto;
+    border-top: 1px solid #EDEBE9;
+    background: @surface;
 }
 
 /* ---------- Landing page ---------- */

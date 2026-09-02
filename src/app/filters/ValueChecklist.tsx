@@ -9,19 +9,20 @@ interface Props {
     /** Keys currently ticked. */
     selected: Set<string>;
     showSearch: boolean;
+    /** Height budget for the scrolling list, set by the popover. */
+    listHeight: number;
     onToggle(key: string, checked: boolean): void;
     onSetMany(keys: string[], checked: boolean): void;
 }
 
 const ITEM_HEIGHT = 24;
-const LIST_HEIGHT = 210;
 
 /**
  * Excel's searchable value list. The rows are virtualised because a column can
  * easily contribute tens of thousands of distinct values within the data window.
  */
 export function ValueChecklist(props: Props): JSX.Element {
-    const { values, selected, showSearch, onToggle, onSetMany } = props;
+    const { values, selected, showSearch, listHeight, onToggle, onSetMany } = props;
     const [search, setSearch] = React.useState("");
     const scrollRef = React.useRef<HTMLDivElement>(null);
 
@@ -79,7 +80,7 @@ export function ValueChecklist(props: Props): JSX.Element {
                 <span>{search ? "(Select all results)" : "(Select all)"}</span>
             </label>
 
-            <div className="txl-checklist-scroll" ref={scrollRef} style={{ height: LIST_HEIGHT }}>
+            <div className="txl-checklist-scroll" ref={scrollRef} style={{ height: listHeight }}>
                 {filtered.length === 0 ? (
                     <div className="txl-empty">No matches</div>
                 ) : (

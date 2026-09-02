@@ -35,7 +35,12 @@ interface Props {
 }
 
 const POPOVER_WIDTH = 260;
-const ESTIMATED_HEIGHT = 400;
+/** Below this much free space the menu is not usable as a dropdown. */
+const MIN_USABLE_HEIGHT = 240;
+/** Head, sort, condition, labels and actions — everything but the value list. */
+const CHROME_HEIGHT = 292;
+/** Compact mode lays the sort actions out in a row, which reclaims a block. */
+const COMPACT_CHROME_SAVING = 62;
 
 /**
  * Excel's column filter menu: sort actions, an optional condition, and a
@@ -163,28 +168,55 @@ export function FilterPopover(props: Props): JSX.Element {
         onApply(null);
     };
 
-    // Flip above the header when there is not enough room below it.
-    const openUpwards =
-        anchor.bottom + ESTIMATED_HEIGHT > container.height && anchor.top > ESTIMATED_HEIGHT * 0.6;
-    const left = Math.max(
-        4,
-        Math.min(anchor.left, Math.max(4, container.width - POPOVER_WIDTH - 4))
-    );
-    const style: React.CSSProperties = {
-        left,
-        width: POPOVER_WIDTH,
-        maxHeight: Math.max(180, container.height - 16)
-    };
-    if (openUpwards) {
-        style.bottom = Math.max(4, container.height - anchor.top + 2);
+    const spaceBelow = container.height - anchor.bottom - 8;
+    const spaceAbove = anchor.top - 8;
+
+    /*
+     * In a small visual there is nowhere to hang a dropdown without cutting off
+     * its buttons, so the menu becomes a sheet covering the visual instead.
+     * That keeps Apply reachable however little room the report gives us.
+     */
+    const compact =
+        container.width < 320 || Math.max(spaceBelow, spaceAbove) < MIN_USABLE_HEIGHT;
+
+    let style: React.CSSProperties;
+    let panelHeight: number;
+
+    if (compact) {
+        panelHeight = Math.max(150, container.height - 8);
+        style = {
+            left: 4,
+            top: 4,
+            width: Math.max(170, container.width - 8),
+            height: panelHeight
+        };
     } else {
-        style.top = anchor.bottom + 2;
+        const openUpwards = spaceBelow < MIN_USABLE_HEIGHT && spaceAbove > spaceBelow;
+        const width = Math.min(POPOVER_WIDTH, container.width - 8);
+        panelHeight = Math.min(
+            container.height - 8,
+            Math.max(MIN_USABLE_HEIGHT, openUpwards ? spaceAbove : spaceBelow)
+        );
+        style = {
+            left: Math.max(4, Math.min(anchor.left, Math.max(4, container.width - width - 4))),
+            width,
+            maxHeight: panelHeight
+        };
+        if (openUpwards) {
+            style.bottom = Math.max(4, container.height - anchor.top + 2);
+        } else {
+            style.top = anchor.bottom + 2;
+        }
     }
+
+    // The list gives up its space first; the body scrolls if that is not enough.
+    const chrome = compact ? CHROME_HEIGHT - COMPACT_CHROME_SAVING : CHROME_HEIGHT;
+    const listHeight = Math.max(84, Math.min(240, panelHeight - chrome));
 
     return (
         <div
             ref={rootRef}
-            className="txl-popover"
+            className={`txl-popover${compact ? " is-compact" : ""}`}
             style={style}
             role="dialog"
             aria-label={`Filter ${column.displayName}`}
@@ -200,6 +232,7 @@ export function FilterPopover(props: Props): JSX.Element {
                 </button>
             </div>
 
+            <div className="txl-popover-body">
             <div className="txl-popover-sort">
                 <button
                     className={`txl-menu-btn${sortDirection === "asc" ? " is-active" : ""}`}
@@ -237,12 +270,14 @@ export function FilterPopover(props: Props): JSX.Element {
                     values={values}
                     selected={selected}
                     showSearch={showSearch}
+                    listHeight={listHeight}
                     onToggle={toggle}
                     onSetMany={setMany}
                 />
                 {condition && (
                     <div className="txl-note">A condition is set; it overrides the ticked values.</div>
                 )}
+            </div>
             </div>
 
             {scopeNote && <div className="txl-note txl-note-scope">{scopeNote}</div>}

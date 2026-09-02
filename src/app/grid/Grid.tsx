@@ -97,10 +97,15 @@ export function Grid(props: Props): JSX.Element {
         overscan: 10
     });
 
-    // Re-measure whenever something that changes a row's height changes.
-    React.useEffect(() => {
-        virtualizer.measure();
-    }, [virtualizer, wrapsRows, rowHeight, style.body.fontSize, style.grid.paddingX, widths, columns]);
+    /*
+     * No manual re-measure here. measureElement installs a ResizeObserver on
+     * every row, so a genuine height change — wrap toggled, a column dragged
+     * narrower, density or font size changed — is picked up on its own.
+     * Calling virtualizer.measure() would instead *discard* those measurements,
+     * and because the rows' rendered size has not changed, nothing would report
+     * them again; every resize of the visual rebuilds the data view, so that
+     * left wrapped rows stuck at the estimated height until they remounted.
+     */
 
     const sortLookup = React.useMemo(() => {
         const map = new Map<string, { dir: SortEntry["dir"]; index: number }>();
