@@ -47,6 +47,7 @@ export function readColumnFormatting(column: DataViewMetadataColumn): ColumnForm
     const objects = column.objects;
     return {
         hide: readBool(objects, COLUMN_OBJECT, "hide", false),
+        userSelectable: readBool(objects, COLUMN_OBJECT, "userSelectable", false),
         width: readOptionalNumber(objects, COLUMN_OBJECT, "width"),
         alignment: readEnum(objects, COLUMN_OBJECT, "alignment", ALIGNMENTS, "auto"),
         displayUnits: readNumber(objects, COLUMN_OBJECT, "displayUnits", 0),
@@ -122,6 +123,12 @@ export function buildColumnFormattingGroups(columns: ColumnModel[]): formattingS
                 displayName: "Hide column",
                 selector: selectorFor(column),
                 value: column.fmt.hide
+            }),
+            new formattingSettings.ToggleSwitch({
+                name: "userSelectable",
+                displayName: "Reader can choose this column",
+                selector: selectorFor(column),
+                value: column.fmt.userSelectable
             }),
             new formattingSettings.NumUpDown({
                 name: "width",

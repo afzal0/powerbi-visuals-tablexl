@@ -56,6 +56,8 @@ export interface ConditionalFormatting {
 /** Per-column display settings, resolved from the column's own objects. */
 export interface ColumnFormatting {
     hide: boolean;
+    /** The reader may switch this column on and off from the column chooser. */
+    userSelectable: boolean;
     width: number | null;
     alignment: Alignment;
     displayUnits: number;

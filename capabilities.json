@@ -121,10 +121,22 @@
                     "displayName": "Alignment",
                     "type": {
                         "enumeration": [
-                            { "value": "auto", "displayName": "Match column" },
-                            { "value": "left", "displayName": "Left" },
-                            { "value": "center", "displayName": "Center" },
-                            { "value": "right", "displayName": "Right" }
+                            {
+                                "value": "auto",
+                                "displayName": "Match column"
+                            },
+                            {
+                                "value": "left",
+                                "displayName": "Left"
+                            },
+                            {
+                                "value": "center",
+                                "displayName": "Center"
+                            },
+                            {
+                                "value": "right",
+                                "displayName": "Right"
+                            }
                         ]
                     }
                 },
@@ -245,9 +257,18 @@
                     "displayName": "Row density",
                     "type": {
                         "enumeration": [
-                            { "value": "compact", "displayName": "Compact" },
-                            { "value": "normal", "displayName": "Normal" },
-                            { "value": "comfortable", "displayName": "Comfortable" }
+                            {
+                                "value": "compact",
+                                "displayName": "Compact"
+                            },
+                            {
+                                "value": "normal",
+                                "displayName": "Normal"
+                            },
+                            {
+                                "value": "comfortable",
+                                "displayName": "Comfortable"
+                            }
                         ]
                     }
                 },
@@ -349,8 +370,14 @@
                     "displayName": "Filter scope",
                     "type": {
                         "enumeration": [
-                            { "value": "local", "displayName": "This visual only" },
-                            { "value": "cross", "displayName": "Whole report page" }
+                            {
+                                "value": "local",
+                                "displayName": "This visual only"
+                            },
+                            {
+                                "value": "cross",
+                                "displayName": "Whole report page"
+                            }
                         ]
                     }
                 },
@@ -429,13 +456,34 @@
                     "displayName": "Aggregation",
                     "type": {
                         "enumeration": [
-                            { "value": "none", "displayName": "None" },
-                            { "value": "sum", "displayName": "Sum" },
-                            { "value": "avg", "displayName": "Average" },
-                            { "value": "min", "displayName": "Minimum" },
-                            { "value": "max", "displayName": "Maximum" },
-                            { "value": "count", "displayName": "Count" },
-                            { "value": "countDistinct", "displayName": "Count (distinct)" }
+                            {
+                                "value": "none",
+                                "displayName": "None"
+                            },
+                            {
+                                "value": "sum",
+                                "displayName": "Sum"
+                            },
+                            {
+                                "value": "avg",
+                                "displayName": "Average"
+                            },
+                            {
+                                "value": "min",
+                                "displayName": "Minimum"
+                            },
+                            {
+                                "value": "max",
+                                "displayName": "Maximum"
+                            },
+                            {
+                                "value": "count",
+                                "displayName": "Count"
+                            },
+                            {
+                                "value": "countDistinct",
+                                "displayName": "Count (distinct)"
+                            }
                         ]
                     }
                 }
@@ -460,10 +508,22 @@
                     "displayName": "Alignment",
                     "type": {
                         "enumeration": [
-                            { "value": "auto", "displayName": "Automatic" },
-                            { "value": "left", "displayName": "Left" },
-                            { "value": "center", "displayName": "Center" },
-                            { "value": "right", "displayName": "Right" }
+                            {
+                                "value": "auto",
+                                "displayName": "Automatic"
+                            },
+                            {
+                                "value": "left",
+                                "displayName": "Left"
+                            },
+                            {
+                                "value": "center",
+                                "displayName": "Center"
+                            },
+                            {
+                                "value": "right",
+                                "displayName": "Right"
+                            }
                         ]
                     }
                 },
@@ -506,6 +566,13 @@
                             }
                         }
                     }
+                },
+                "userSelectable": {
+                    "displayName": "Reader can choose this column",
+                    "description": "Puts the column in the pool readers pick from. Combine with Hide column to decide whether it starts on or off.",
+                    "type": {
+                        "bool": true
+                    }
                 }
             }
         },
@@ -516,10 +583,22 @@
                     "displayName": "Format by",
                     "type": {
                         "enumeration": [
-                            { "value": "none", "displayName": "None" },
-                            { "value": "colorScale", "displayName": "Color scale" },
-                            { "value": "dataBar", "displayName": "Data bars" },
-                            { "value": "rules", "displayName": "Rules" }
+                            {
+                                "value": "none",
+                                "displayName": "None"
+                            },
+                            {
+                                "value": "colorScale",
+                                "displayName": "Color scale"
+                            },
+                            {
+                                "value": "dataBar",
+                                "displayName": "Data bars"
+                            },
+                            {
+                                "value": "rules",
+                                "displayName": "Rules"
+                            }
                         ]
                     }
                 },
@@ -527,8 +606,14 @@
                     "displayName": "Apply to",
                     "type": {
                         "enumeration": [
-                            { "value": "background", "displayName": "Background color" },
-                            { "value": "font", "displayName": "Font color" }
+                            {
+                                "value": "background",
+                                "displayName": "Background color"
+                            },
+                            {
+                                "value": "font",
+                                "displayName": "Font color"
+                            }
                         ]
                     }
                 },
@@ -598,16 +683,46 @@
                     "displayName": "Rule 1 condition",
                     "type": {
                         "enumeration": [
-                            { "value": "none", "displayName": "Off" },
-                            { "value": "eq", "displayName": "is" },
-                            { "value": "ne", "displayName": "is not" },
-                            { "value": "gt", "displayName": "is greater than" },
-                            { "value": "gte", "displayName": "is greater than or equal to" },
-                            { "value": "lt", "displayName": "is less than" },
-                            { "value": "lte", "displayName": "is less than or equal to" },
-                            { "value": "contains", "displayName": "contains" },
-                            { "value": "startsWith", "displayName": "starts with" },
-                            { "value": "isBlank", "displayName": "is blank" }
+                            {
+                                "value": "none",
+                                "displayName": "Off"
+                            },
+                            {
+                                "value": "eq",
+                                "displayName": "is"
+                            },
+                            {
+                                "value": "ne",
+                                "displayName": "is not"
+                            },
+                            {
+                                "value": "gt",
+                                "displayName": "is greater than"
+                            },
+                            {
+                                "value": "gte",
+                                "displayName": "is greater than or equal to"
+                            },
+                            {
+                                "value": "lt",
+                                "displayName": "is less than"
+                            },
+                            {
+                                "value": "lte",
+                                "displayName": "is less than or equal to"
+                            },
+                            {
+                                "value": "contains",
+                                "displayName": "contains"
+                            },
+                            {
+                                "value": "startsWith",
+                                "displayName": "starts with"
+                            },
+                            {
+                                "value": "isBlank",
+                                "displayName": "is blank"
+                            }
                         ]
                     }
                 },
@@ -631,16 +746,46 @@
                     "displayName": "Rule 2 condition",
                     "type": {
                         "enumeration": [
-                            { "value": "none", "displayName": "Off" },
-                            { "value": "eq", "displayName": "is" },
-                            { "value": "ne", "displayName": "is not" },
-                            { "value": "gt", "displayName": "is greater than" },
-                            { "value": "gte", "displayName": "is greater than or equal to" },
-                            { "value": "lt", "displayName": "is less than" },
-                            { "value": "lte", "displayName": "is less than or equal to" },
-                            { "value": "contains", "displayName": "contains" },
-                            { "value": "startsWith", "displayName": "starts with" },
-                            { "value": "isBlank", "displayName": "is blank" }
+                            {
+                                "value": "none",
+                                "displayName": "Off"
+                            },
+                            {
+                                "value": "eq",
+                                "displayName": "is"
+                            },
+                            {
+                                "value": "ne",
+                                "displayName": "is not"
+                            },
+                            {
+                                "value": "gt",
+                                "displayName": "is greater than"
+                            },
+                            {
+                                "value": "gte",
+                                "displayName": "is greater than or equal to"
+                            },
+                            {
+                                "value": "lt",
+                                "displayName": "is less than"
+                            },
+                            {
+                                "value": "lte",
+                                "displayName": "is less than or equal to"
+                            },
+                            {
+                                "value": "contains",
+                                "displayName": "contains"
+                            },
+                            {
+                                "value": "startsWith",
+                                "displayName": "starts with"
+                            },
+                            {
+                                "value": "isBlank",
+                                "displayName": "is blank"
+                            }
                         ]
                     }
                 },
@@ -664,16 +809,46 @@
                     "displayName": "Rule 3 condition",
                     "type": {
                         "enumeration": [
-                            { "value": "none", "displayName": "Off" },
-                            { "value": "eq", "displayName": "is" },
-                            { "value": "ne", "displayName": "is not" },
-                            { "value": "gt", "displayName": "is greater than" },
-                            { "value": "gte", "displayName": "is greater than or equal to" },
-                            { "value": "lt", "displayName": "is less than" },
-                            { "value": "lte", "displayName": "is less than or equal to" },
-                            { "value": "contains", "displayName": "contains" },
-                            { "value": "startsWith", "displayName": "starts with" },
-                            { "value": "isBlank", "displayName": "is blank" }
+                            {
+                                "value": "none",
+                                "displayName": "Off"
+                            },
+                            {
+                                "value": "eq",
+                                "displayName": "is"
+                            },
+                            {
+                                "value": "ne",
+                                "displayName": "is not"
+                            },
+                            {
+                                "value": "gt",
+                                "displayName": "is greater than"
+                            },
+                            {
+                                "value": "gte",
+                                "displayName": "is greater than or equal to"
+                            },
+                            {
+                                "value": "lt",
+                                "displayName": "is less than"
+                            },
+                            {
+                                "value": "lte",
+                                "displayName": "is less than or equal to"
+                            },
+                            {
+                                "value": "contains",
+                                "displayName": "contains"
+                            },
+                            {
+                                "value": "startsWith",
+                                "displayName": "starts with"
+                            },
+                            {
+                                "value": "isBlank",
+                                "displayName": "is blank"
+                            }
                         ]
                     }
                 },
@@ -738,9 +913,18 @@
                     "displayName": "Orientation",
                     "type": {
                         "enumeration": [
-                            { "value": "portrait", "displayName": "Portrait" },
-                            { "value": "landscape", "displayName": "Landscape" },
-                            { "value": "auto", "displayName": "Automatic" }
+                            {
+                                "value": "portrait",
+                                "displayName": "Portrait"
+                            },
+                            {
+                                "value": "landscape",
+                                "displayName": "Landscape"
+                            },
+                            {
+                                "value": "auto",
+                                "displayName": "Automatic"
+                            }
                         ]
                     }
                 },
@@ -748,10 +932,22 @@
                     "displayName": "Page size",
                     "type": {
                         "enumeration": [
-                            { "value": "a4", "displayName": "A4" },
-                            { "value": "letter", "displayName": "Letter" },
-                            { "value": "legal", "displayName": "Legal" },
-                            { "value": "a3", "displayName": "A3" }
+                            {
+                                "value": "a4",
+                                "displayName": "A4"
+                            },
+                            {
+                                "value": "letter",
+                                "displayName": "Letter"
+                            },
+                            {
+                                "value": "legal",
+                                "displayName": "Legal"
+                            },
+                            {
+                                "value": "a3",
+                                "displayName": "A3"
+                            }
                         ]
                     }
                 },
@@ -788,6 +984,45 @@
                 "rawValues": {
                     "displayName": "Export raw values",
                     "description": "Export underlying values instead of the displayed formatted text.",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
+        "views": {
+            "displayName": "Views (worksheets)",
+            "properties": {
+                "show": {
+                    "displayName": "Enable views",
+                    "description": "Show worksheet tabs and a column chooser so readers can build their own column sets.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "maxViews": {
+                    "displayName": "Maximum views",
+                    "description": "How many worksheets a reader may create.",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "maxColumns": {
+                    "displayName": "Maximum columns per view",
+                    "description": "Cap on optional columns in one view. 0 means no cap. Always-on columns do not count.",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "lockViews": {
+                    "displayName": "Lock views",
+                    "description": "Readers can switch between views but cannot add, rename or remove them.",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showColumnChooser": {
+                    "displayName": "Show column chooser",
                     "type": {
                         "bool": true
                     }

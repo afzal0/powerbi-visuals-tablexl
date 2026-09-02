@@ -1,5 +1,5 @@
 import { RowModel, TableModel } from "../data/types";
-import { FilterMap } from "../filtering/filterState";
+import { ViewCommand, ViewLimits, Workspace } from "../views/viewTypes";
 import { ResolvedStyle } from "../formatting/theme";
 import { ExportKind } from "../export/download";
 import { TableXLSettings } from "../settings/settingsModel";
@@ -15,8 +15,8 @@ export interface ExportAvailability {
  * API directly, which keeps the lifecycle concerns in visual.ts.
  */
 export interface HostActions {
-    /** Persist filter state and, in cross-filter scope, push it to the page. */
-    onFiltersChanged(filters: FilterMap): void;
+    /** The single channel for changing a view: columns, filters, sort, tabs. */
+    onViewCommand(command: ViewCommand): void;
     onSelectRow(row: RowModel | null, multiSelect: boolean): void;
     onContextMenu(row: RowModel | null, x: number, y: number): void;
     onColumnResize(columnKey: string, width: number): void;
@@ -38,14 +38,12 @@ export interface AppProps {
     style: ResolvedStyle;
     locale: string;
     viewport: { width: number; height: number };
-    /**
-     * Filter state supplied by the host — restored report filters in
-     * cross-filter scope, or the persisted local state. Adopted whenever it
-     * differs from what the user has on screen.
-     */
-    hostFilters: FilterMap;
-    /** Bumped when hostFilters should replace the in-component state. */
-    filtersRevision: number;
+    /** Views, and which one is active. Always holds at least one view. */
+    workspace: Workspace;
+    /** The author's limits on what readers may do with views. */
+    viewLimits: ViewLimits;
+    /** True while the report is open for editing, so changes save to the report. */
+    isAuthor: boolean;
     selectedRowIds: number[];
     /** False when the report author has switched interactions off. */
     allowInteractions: boolean;

@@ -50,6 +50,17 @@ export class SelectionHandler {
             this.selectedKeys.clear();
             return;
         }
+
+        // Clicking the already-selected row again clears the selection, which is
+        // how the native visuals behave and the only way to lift a cross-filter
+        // without clicking empty space.
+        const key = row.selectionId.getKey();
+        if (!multiSelect && this.selectedKeys.size === 1 && this.selectedKeys.has(key)) {
+            await this.manager.clear();
+            this.selectedKeys.clear();
+            return;
+        }
+
         const ids = await this.manager.select(row.selectionId, multiSelect);
         this.selectedKeys = new Set(ids.map((id) => (id as ISelectionId).getKey()));
     }

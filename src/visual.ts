@@ -25,11 +25,20 @@ import { buildPdf } from "./export/exportPdf";
 import { buildWorkbook } from "./export/xlsxWriter";
 import { ExportView } from "./export/viewSnapshot";
 import { applyToHost, buildJsonFilters, restoreFromJsonFilters } from "./filtering/filterBridge";
+import { FilterMap } from "./filtering/filterState";
 import {
-    deserializeFilters,
-    FilterMap,
-    serializeFilters
-} from "./filtering/filterState";
+    applyCommand,
+    defaultColumnsFor,
+    deserializeWorkspace,
+    serializeWorkspace
+} from "./views/viewState";
+import {
+    activeView,
+    emptyWorkspace,
+    ViewCommand,
+    ViewLimits,
+    Workspace
+} from "./views/viewTypes";
 import { resolveStyle } from "./formatting/theme";
 import { SelectionHandler } from "./interactions/selection";
 import { TooltipHandler } from "./interactions/tooltips";
@@ -81,8 +90,7 @@ export class Visual implements IVisual {
     private pendingOptions: VisualUpdateOptions | null = null;
     private renderedSnapshotId = -1;
 
-    private filters: FilterMap = {};
-    private filtersRevision = 0;
+    private workspace: Workspace = emptyWorkspace();
     private initialised = false;
     private lastPushedJson = "";
     private exportAvailability: ExportAvailability = { ok: false };
@@ -100,7 +108,7 @@ export class Visual implements IVisual {
         this.tooltips = new TooltipHandler(this.host);
 
         this.actions = {
-            onFiltersChanged: (filters) => this.handleFiltersChanged(filters),
+            onViewCommand: (command) => this.handleViewCommand(command),
             onSelectRow: (row, multiSelect) => {
                 void this.selection.select(row, multiSelect).then(() => this.render());
             },
@@ -140,10 +148,13 @@ export class Visual implements IVisual {
                 TableXLSettings,
                 dataView
             );
+            this.isAuthor = options.viewMode !== undefined
+                ? options.viewMode !== powerbi.ViewMode.View
+                : this.isAuthor;
             this.model = transform(dataView, this.host);
             this.selection.setRows(this.model ? this.model.rows : []);
 
-            this.adoptHostFilters(options, dataView);
+            this.adoptHostState(options, dataView);
             this.snapshotId++;
             this.render(options.viewport);
         } catch (error) {
@@ -151,37 +162,66 @@ export class Visual implements IVisual {
         }
     }
 
+    /** The author's limits, read from the views card. */
+    private viewLimits(): ViewLimits {
+        const card = this.settings.views;
+        return {
+            enabled: card.show.value,
+            maxViews: Math.max(1, card.maxViews.value),
+            maxColumns: Math.max(0, card.maxColumns.value),
+            locked: card.lockViews.value,
+            showColumnChooser: card.showColumnChooser.value
+        };
+    }
+
     /**
-     * Picks up filter state the visual did not set itself: the state persisted
-     * with the report on first load, and later any report-level filter change
-     * that did not originate here (a bookmark, or the report filter pane).
+     * Picks up state the visual did not set itself: what was saved with the
+     * report on first load, a bookmark being applied, or a report-level filter
+     * change that did not originate here.
+     *
+     * The test for "is this just my own state coming back?" is a comparison
+     * against a canonical serialisation of what we hold right now. There is
+     * deliberately no pending-write flag: persistProperties is asynchronous and
+     * is not guaranteed to echo, so a flag cleared by counting updates can
+     * either wedge forever or adopt a stale payload over live work.
      */
-    private adoptHostFilters(options: VisualUpdateOptions, dataView: DataView | undefined): void {
+    private adoptHostState(options: VisualUpdateOptions, dataView: DataView | undefined): void {
         const columns = this.model ? this.model.columns : [];
         const crossScope = this.settings.filtering.scope.value === "cross";
         const incomingJson = JSON.stringify(options.jsonFilters ?? []);
+        const raw = dataView?.metadata?.objects?.[GENERAL_OBJECT]?.[SAVED_STATE_PROPERTY];
 
         if (!this.initialised) {
             this.initialised = true;
-            const restored = crossScope
-                ? restoreFromJsonFilters(options.jsonFilters as IFilter[] | undefined, columns)
-                : {};
-            const savedRaw = dataView?.metadata?.objects?.[GENERAL_OBJECT]?.[
-                SAVED_STATE_PROPERTY
-            ] as string | undefined;
-            const saved = deserializeFilters(savedRaw);
-            // Report filters win when present; otherwise fall back to the
-            // state saved alongside the visual.
-            this.filters = Object.keys(restored).length > 0 ? restored : saved;
-            this.filtersRevision++;
+            this.workspace = deserializeWorkspace(
+                typeof raw === "string" ? raw : undefined,
+                defaultColumnsFor(columns)
+            );
+            // A report-level filter that survived reload wins over the saved
+            // one, because the rest of the page is already filtered by it.
+            if (crossScope) {
+                const restored = restoreFromJsonFilters(
+                    options.jsonFilters as IFilter[] | undefined,
+                    columns
+                );
+                if (Object.keys(restored).length > 0) {
+                    this.setActiveFilters(restored);
+                }
+            }
             this.lastPushedJson = incomingJson;
             return;
         }
 
-        if (!crossScope) {
-            return;
+        /*
+         * An absent property means "this update carried no object information"
+         * — which happens for resize, view-mode and style updates — and must
+         * never be read as "the state was cleared".
+         */
+        if (typeof raw === "string" && raw !== serializeWorkspace(this.workspace)) {
+            this.workspace = deserializeWorkspace(raw, defaultColumnsFor(columns));
         }
-        if (incomingJson === this.lastPushedJson) {
+
+        if (!crossScope || incomingJson === this.lastPushedJson) {
             return;
         }
         this.lastPushedJson = incomingJson;
@@ -195,32 +235,64 @@ export class Visual implements IVisual {
             columns
         );
         const echoOfOurs = restoreFromJsonFilters(
-            buildJsonFilters(columns, this.filters),
+            buildJsonFilters(columns, activeView(this.workspace).filters),
             columns
         );
-        if (serializeFilters(incoming) === serializeFilters(echoOfOurs)) {
+        if (JSON.stringify(incoming) !== JSON.stringify(echoOfOurs)) {
+            this.setActiveFilters(incoming);
+        }
+    }
+
+    private setActiveFilters(filters: FilterMap): void {
+        this.workspace = applyCommand(
+            this.workspace,
+            { type: "setFilters", filters },
+            { limits: this.viewLimits(), columns: this.model ? this.model.columns : [], widths: {} }
+        );
+    }
+
+    /** Every change to a view arrives here, from the tabs, chooser or grid. */
+    private handleViewCommand(command: ViewCommand): void {
+        const before = this.workspace;
+        this.workspace = applyCommand(before, command, {
+            limits: this.viewLimits(),
+            columns: this.model ? this.model.columns : [],
+            widths: {}
+        });
+        if (this.workspace === before) {
             return;
         }
 
-        this.filters = incoming;
-        this.filtersRevision++;
+        this.snapshotId++;
+        this.render();
+        this.schedulePersist();
+
+        // Switching views changes the filter set, so the page filter has to
+        // follow it, not just an explicit filter edit.
+        if (
+            command.type === "setFilters" ||
+            command.type === "activate" ||
+            command.type === "create" ||
+            command.type === "delete"
+        ) {
+            this.scheduleCrossFilter();
+        }
     }
 
-    private handleFiltersChanged(filters: FilterMap): void {
-        this.filters = filters;
-
+    private schedulePersist(): void {
         if (this.persistTimer !== null) {
             clearTimeout(this.persistTimer);
         }
         this.persistTimer = window.setTimeout(() => {
             this.persistTimer = null;
-            this.persistFilterState(filters);
+            this.persistWorkspace();
         }, PERSIST_DEBOUNCE_MS);
+    }
 
+    private scheduleCrossFilter(): void {
         if (this.settings.filtering.scope.value !== "cross") {
             return;
         }
-
         // Each push re-queries the whole page, so coalesce rapid changes.
         if (this.crossFilterTimer !== null) {
             clearTimeout(this.crossFilterTimer);
@@ -228,18 +300,17 @@ export class Visual implements IVisual {
         this.crossFilterTimer = window.setTimeout(() => {
             this.crossFilterTimer = null;
             const columns = this.model ? this.model.columns : [];
-            const jsonFilters = buildJsonFilters(columns, filters);
+            const jsonFilters = buildJsonFilters(columns, activeView(this.workspace).filters);
             this.lastPushedJson = JSON.stringify(jsonFilters);
             applyToHost(this.host, jsonFilters);
         }, CROSS_FILTER_DEBOUNCE_MS);
     }
 
-    /** Keeps local filters across report reloads, where nothing is pushed. */
-    private persistFilterState(filters: FilterMap): void {
+    private persistWorkspace(): void {
         const instance: VisualObjectInstance = {
             objectName: GENERAL_OBJECT,
             selector: null,
-            properties: { [SAVED_STATE_PROPERTY]: serializeFilters(filters) }
+            properties: { [SAVED_STATE_PROPERTY]: serializeWorkspace(this.workspace) }
         };
         this.host.persistProperties({ merge: [instance] });
     }
@@ -281,6 +352,8 @@ export class Visual implements IVisual {
     }
 
     private lastViewport = { width: 0, height: 0 };
+    /** Edit / InFocusEdit mean the report is open for editing. */
+    private isAuthor = false;
 
     private render(viewport?: powerbi.IViewport): void {
         if (this.destroyed) {
@@ -298,8 +371,9 @@ export class Visual implements IVisual {
                 style,
                 locale: this.host.locale,
                 viewport: this.lastViewport,
-                hostFilters: this.filters,
-                filtersRevision: this.filtersRevision,
+                workspace: this.workspace,
+                viewLimits: this.viewLimits(),
+                isAuthor: this.isAuthor,
                 selectedRowIds: this.selection.getSelectedRowIds(),
                 allowInteractions: this.host.hostCapabilities.allowInteractions !== false,
                 exportAvailability: this.exportAvailability,

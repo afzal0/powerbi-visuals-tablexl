@@ -4,7 +4,7 @@
     "displayName": "Excel-Style Table",
     "guid": "tableXL39B4CB6864B8455DAD7A0CB2DA372938",
     "visualClassName": "Visual",
-    "version": "1.0.2.0",
+    "version": "1.1.0.0",
     "description": "A table you can work like a spreadsheet: filter and sort any column, format it richly, and export or print the current view as CSV, Excel or PDF.",
     "supportUrl": "https://github.com/afzal0/powerbi-visuals-tablexl/issues",
     "gitHubUrl": "https://github.com/afzal0/powerbi-visuals-tablexl"
@@ -22,5 +22,5 @@
   "capabilities": "capabilities.json",
   "dependencies": null,
   "stringResources": [],
-  "version": "1.0.2.0"
+  "version": "1.1.0.0"
 }

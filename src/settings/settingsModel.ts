@@ -299,6 +299,47 @@ class FilteringCard extends formattingSettings.SimpleCard {
     ];
 }
 
+class ViewsCard extends formattingSettings.SimpleCard {
+    name = "views";
+    displayName = "Views (worksheets)";
+
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Enable views",
+        value: false
+    });
+
+    topLevelSlice = this.show;
+
+    maxViews = new formattingSettings.NumUpDown({
+        name: "maxViews",
+        displayName: "Maximum views",
+        value: 5,
+        options: numberRange(1, 20)
+    });
+
+    maxColumns = new formattingSettings.NumUpDown({
+        name: "maxColumns",
+        displayName: "Maximum columns per view",
+        value: 0,
+        options: numberRange(0, 60)
+    });
+
+    lockViews = new formattingSettings.ToggleSwitch({
+        name: "lockViews",
+        displayName: "Lock views",
+        value: false
+    });
+
+    showColumnChooser = new formattingSettings.ToggleSwitch({
+        name: "showColumnChooser",
+        displayName: "Show column chooser",
+        value: true
+    });
+
+    slices = [this.maxViews, this.maxColumns, this.lockViews, this.showColumnChooser];
+}
+
 class TotalsCard extends formattingSettings.CompositeCard {
     name = "totals";
     displayName = "Totals row";
@@ -478,6 +519,7 @@ export class TableXLSettings extends formattingSettings.Model {
     values = new ValuesCard();
     grid = new GridCard();
     filtering = new FilteringCard();
+    views = new ViewsCard();
     totals = new TotalsCard();
     exportSettings = new ExportCard();
 
@@ -486,6 +528,7 @@ export class TableXLSettings extends formattingSettings.Model {
         this.values,
         this.grid,
         this.filtering,
+        this.views,
         this.totals,
         this.exportSettings
     ];
@@ -497,10 +540,11 @@ export class TableXLSettings extends formattingSettings.Model {
             this.values,
             this.grid,
             this.filtering,
+            this.views,
             this.totals,
             this.exportSettings
         ];
     }
 }
 
-export type { HeaderCard, ValuesCard, GridCard, FilteringCard, TotalsCard, ExportCard };
+export type { HeaderCard, ValuesCard, GridCard, FilteringCard, ViewsCard, TotalsCard, ExportCard };

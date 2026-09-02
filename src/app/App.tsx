@@ -13,12 +13,21 @@ import {
 import { crossFilterLimitation } from "../filtering/filterBridge";
 import { ColumnFilter, FilterMap, hasActiveFilters } from "../filtering/filterState";
 import { computeStats } from "../formatting/conditionalFormatting";
+import {
+    applyViewFormatting,
+    pinnedColumns,
+    poolColumns,
+    resolveVisibleColumns
+} from "../views/viewState";
+import { activeView } from "../views/viewTypes";
 import { AppProps } from "./appTypes";
 import { AnchorRect, FilterPopover } from "./filters/FilterPopover";
 import { Grid } from "./grid/Grid";
 import { MIN_COLUMN_WIDTH } from "./grid/HeaderCell";
 import { LandingPage } from "./LandingPage";
 import { Toolbar } from "./Toolbar";
+import { ColumnChooser } from "./views/ColumnChooser";
+import { ViewTabs } from "./views/ViewTabs";
 
 interface ResizeState {
     columnKey: string;
@@ -34,9 +43,10 @@ interface OpenFilter {
 /**
  * Root of the visual's UI.
  *
- * View state — sort order, filters, column widths, scroll position — lives here
- * rather than in the host, so that a formatting change or an unrelated data
- * refresh never resets what the user has set up.
+ * The active view is the single source of truth for which columns are shown and
+ * how they are filtered and sorted; every change is dispatched as a command and
+ * returns as new props. Column widths and the open menus are the only local
+ * state, because they are transient and never belong to a saved view.
  */
 export function App(props: AppProps): JSX.Element {
     const {
@@ -46,36 +56,39 @@ export function App(props: AppProps): JSX.Element {
         style,
         locale,
         viewport,
-        hostFilters,
-        filtersRevision,
+        workspace,
+        viewLimits,
+        isAuthor,
         selectedRowIds,
         allowInteractions,
         exportAvailability,
         actions
     } = props;
 
-    const [filters, setFilters] = React.useState<FilterMap>(hostFilters);
-    const [sort, setSort] = React.useState<SortEntry[]>([]);
     const [widthOverrides, setWidthOverrides] = React.useState<{ [key: string]: number }>({});
     const [openFilter, setOpenFilter] = React.useState<OpenFilter | null>(null);
+    const [chooserOpen, setChooserOpen] = React.useState(false);
     const [resize, setResize] = React.useState<ResizeState | null>(null);
     const [busyKind, setBusyKind] = React.useState<ExportKind | null>(null);
     const [status, setStatus] = React.useState<string | null>(null);
 
-    // Adopt filters supplied by the host: restored report filters, a bookmark,
-    // or the state persisted alongside the visual.
-    const lastRevision = React.useRef(-1);
-    React.useEffect(() => {
-        if (filtersRevision !== lastRevision.current) {
-            lastRevision.current = filtersRevision;
-            setFilters(hostFilters);
-        }
-    }, [filtersRevision, hostFilters]);
+    const view = activeView(workspace);
+    const filters = view.filters;
+    const sort = view.sort;
+
+    /** Every column the field well provides, with the view's formatting layered on. */
+    const allColumns: ColumnModel[] = React.useMemo(
+        () => (model ? applyViewFormatting(model.columns, view.fmt) : []),
+        [model, view.fmt]
+    );
 
     const columns: ColumnModel[] = React.useMemo(
-        () => (model ? model.columns.filter((column) => !column.fmt.hide) : []),
-        [model]
+        () => resolveVisibleColumns(allColumns, view.columns, viewLimits.enabled),
+        [allColumns, view.columns, viewLimits.enabled]
     );
+
+    const pool = React.useMemo(() => poolColumns(allColumns), [allColumns]);
+    const pinned = React.useMemo(() => pinnedColumns(allColumns), [allColumns]);
 
     // Widths come from the format pane, overridden by any in-session drag.
     const widths = React.useMemo(() => {
@@ -86,14 +99,20 @@ export function App(props: AppProps): JSX.Element {
         return result;
     }, [columns, widthOverrides]);
 
+    /*
+     * Filtering runs over EVERY column, not just the visible ones. Removing a
+     * column from a view must not silently stop its filter applying — Excel
+     * keeps the filter, and in cross-filter scope the report page is filtered
+     * by it regardless, so dropping it here made the table disagree.
+     */
     const filteredRows: RowModel[] = React.useMemo(
-        () => (model ? applyFilters(model.rows, columns, filters) : []),
-        [model, columns, filters]
+        () => (model ? applyFilters(model.rows, allColumns, filters) : []),
+        [model, allColumns, filters]
     );
 
     const sortedRows = React.useMemo(
-        () => sortRows(filteredRows, columns, sort, locale),
-        [filteredRows, columns, sort, locale]
+        () => sortRows(filteredRows, allColumns, sort, locale),
+        [filteredRows, allColumns, sort, locale]
     );
 
     const stats = React.useMemo(
@@ -112,44 +131,49 @@ export function App(props: AppProps): JSX.Element {
         if (!openFilter || !model) {
             return [];
         }
-        const column = columns.find((candidate) => candidate.key === openFilter.columnKey);
+        const column = allColumns.find((candidate) => candidate.key === openFilter.columnKey);
         if (!column) {
             return [];
         }
-        const scoped = applyFilters(model.rows, columns, filters, column.key);
-        return distinctValues(scoped, column, locale);
-    }, [openFilter, model, columns, filters, locale]);
+        return distinctValues(
+            applyFilters(model.rows, allColumns, filters, column.key),
+            column,
+            locale
+        );
+    }, [openFilter, model, allColumns, filters, locale]);
 
     const commitFilters = React.useCallback(
-        (next: FilterMap) => {
-            setFilters(next);
-            actions.onFiltersChanged(next);
-        },
+        (next: FilterMap) => actions.onViewCommand({ type: "setFilters", filters: next }),
         [actions]
     );
 
-    const handleSort = React.useCallback((columnKey: string, additive: boolean) => {
-        setSort((previous) => {
-            const existing = previous.find((entry) => entry.key === columnKey);
+    const handleSort = React.useCallback(
+        (columnKey: string, additive: boolean) => {
+            const existing = sort.find((entry) => entry.key === columnKey);
             const nextDirection: SortDirection | null =
                 !existing ? "asc" : existing.dir === "asc" ? "desc" : null;
-
-            if (!additive) {
-                return nextDirection ? [{ key: columnKey, dir: nextDirection }] : [];
-            }
-            const others = previous.filter((entry) => entry.key !== columnKey);
-            return nextDirection ? [...others, { key: columnKey, dir: nextDirection }] : others;
-        });
-    }, []);
+            const others = sort.filter((entry) => entry.key !== columnKey);
+            const next: SortEntry[] = !additive
+                ? nextDirection
+                    ? [{ key: columnKey, dir: nextDirection }]
+                    : []
+                : nextDirection
+                  ? [...others, { key: columnKey, dir: nextDirection }]
+                  : others;
+            actions.onViewCommand({ type: "setSort", sort: next });
+        },
+        [sort, actions]
+    );
 
     const handleSortFromMenu = React.useCallback(
         (columnKey: string, direction: SortDirection | null) => {
-            setSort((previous) => {
-                const others = previous.filter((entry) => entry.key !== columnKey);
-                return direction ? [...others, { key: columnKey, dir: direction }] : others;
+            const others = sort.filter((entry) => entry.key !== columnKey);
+            actions.onViewCommand({
+                type: "setSort",
+                sort: direction ? [...others, { key: columnKey, dir: direction }] : others
             });
         },
-        []
+        [sort, actions]
     );
 
     // Column resizing: track the pointer globally so the drag survives the
@@ -167,9 +191,9 @@ export function App(props: AppProps): JSX.Element {
         };
         const onUp = (event: MouseEvent): void => {
             const delta = event.clientX - resize.startX;
-            const width = Math.max(MIN_COLUMN_WIDTH, resize.startWidth + delta);
+            const width = Math.round(Math.max(MIN_COLUMN_WIDTH, resize.startWidth + delta));
             setResize(null);
-            actions.onColumnResize(resize.columnKey, Math.round(width));
+            actions.onColumnResize(resize.columnKey, width);
         };
         window.addEventListener("mousemove", onMove);
         window.addEventListener("mouseup", onUp);
@@ -179,7 +203,7 @@ export function App(props: AppProps): JSX.Element {
         };
     }, [resize, actions]);
 
-    // Report that this update has painted. Keyed on the snapshot so each
+    // Report that this update has painted, keyed on the snapshot so each
     // update signals completion exactly once, after its own commit.
     React.useEffect(() => {
         actions.onRendered(snapshotId);
@@ -196,8 +220,9 @@ export function App(props: AppProps): JSX.Element {
                 // Yield a frame so the button's busy state paints before the
                 // main thread is occupied building the file.
                 await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-                const view = buildExportView({
-                    columns: model.columns,
+                const snapshot = buildExportView({
+                    // Export exactly the columns the active view shows.
+                    columns,
                     rows: sortedRows,
                     style,
                     locale,
@@ -206,7 +231,7 @@ export function App(props: AppProps): JSX.Element {
                     useRawValues: settings.exportSettings.rawValues.value,
                     widths
                 });
-                const outcome = await actions.exportFile(kind, view);
+                const outcome = await actions.exportFile(kind, snapshot);
                 setStatus(outcome.ok ? null : (outcome.message ?? "Export failed."));
             } catch {
                 setStatus("The export could not be created.");
@@ -214,26 +239,32 @@ export function App(props: AppProps): JSX.Element {
                 setBusyKind(null);
             }
         },
-        [model, sortedRows, style, locale, settings, widths, actions]
+        [model, columns, sortedRows, style, locale, settings, widths, actions]
     );
 
-    if (!model || columns.length === 0) {
+    if (!model || allColumns.length === 0) {
         return <LandingPage style={style} />;
     }
 
     const activeColumn = openFilter
-        ? columns.find((column) => column.key === openFilter.columnKey)
+        ? allColumns.find((column) => column.key === openFilter.columnKey)
         : undefined;
     const crossScope = settings.filtering.scope.value === "cross";
     const sortEntry = activeColumn
         ? sort.find((entry) => entry.key === activeColumn.key)
         : undefined;
 
+    const showChooserButton =
+        viewLimits.enabled && viewLimits.showColumnChooser && pool.length > 0;
+
     return (
         <div
             className="txl-root"
             style={{ width: viewport.width, height: viewport.height }}
-            onClick={() => setOpenFilter(null)}
+            onClick={() => {
+                setOpenFilter(null);
+                setChooserOpen(false);
+            }}
         >
             {settings.exportSettings.showToolbar.value && (
                 <Toolbar
@@ -249,6 +280,12 @@ export function App(props: AppProps): JSX.Element {
                     hasFilters={hasActiveFilters(filters)}
                     truncated={model.truncated}
                     status={status}
+                    showColumnChooser={showChooserButton}
+                    columnChooserOpen={chooserOpen}
+                    onToggleColumnChooser={() => {
+                        setOpenFilter(null);
+                        setChooserOpen((open) => !open);
+                    }}
                     onExport={runExport}
                     onClearFilters={() => commitFilters({})}
                 />
@@ -269,11 +306,12 @@ export function App(props: AppProps): JSX.Element {
                 stats={stats}
                 totals={totals}
                 onSort={handleSort}
-                onOpenFilter={(columnKey, anchor) =>
+                onOpenFilter={(columnKey, anchor) => {
+                    setChooserOpen(false);
                     setOpenFilter((previous) =>
                         previous && previous.columnKey === columnKey ? null : { columnKey, anchor }
-                    )
-                }
+                    );
+                }}
                 onResizeStart={(columnKey, startX, startWidth) =>
                     setResize({ columnKey, startX, startWidth })
                 }
@@ -284,6 +322,40 @@ export function App(props: AppProps): JSX.Element {
                 onHoverMove={(row, x, y) => actions.onCellMove(row, x, y)}
                 onHoverEnd={() => actions.onHoverEnd()}
             />
+
+            {viewLimits.enabled && (
+                <ViewTabs
+                    views={workspace.views}
+                    activeId={view.id}
+                    locked={viewLimits.locked}
+                    canAdd={workspace.views.length < Math.max(1, viewLimits.maxViews)}
+                    style={style}
+                    persistenceHint={
+                        isAuthor
+                            ? null
+                            : "Views you add last for this session. Save a personal bookmark to keep them."
+                    }
+                    onActivate={(id) => actions.onViewCommand({ type: "activate", id })}
+                    onCreate={() => actions.onViewCommand({ type: "create", copyActive: false })}
+                    onRename={(id, name) => actions.onViewCommand({ type: "rename", id, name })}
+                    onDelete={(id) => actions.onViewCommand({ type: "delete", id })}
+                />
+            )}
+
+            {chooserOpen && (
+                <ColumnChooser
+                    pool={pool}
+                    pinned={pinned}
+                    selected={view.columns}
+                    maxColumns={viewLimits.maxColumns}
+                    container={viewport}
+                    onApply={(next) => {
+                        actions.onViewCommand({ type: "setColumns", columns: next });
+                        setChooserOpen(false);
+                    }}
+                    onClose={() => setChooserOpen(false)}
+                />
+            )}
 
             {openFilter && activeColumn && (
                 <FilterPopover

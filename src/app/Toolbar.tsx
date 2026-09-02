@@ -14,6 +14,9 @@ interface Props {
     hasFilters: boolean;
     truncated: boolean;
     status: string | null;
+    showColumnChooser: boolean;
+    columnChooserOpen: boolean;
+    onToggleColumnChooser(): void;
     onExport(kind: ExportKind): void;
     onClearFilters(): void;
 }
@@ -43,6 +46,9 @@ export function Toolbar(props: Props): JSX.Element {
         hasFilters,
         truncated,
         status,
+        showColumnChooser,
+        columnChooserOpen,
+        onToggleColumnChooser,
         onExport,
         onClearFilters
     } = props;
@@ -82,6 +88,21 @@ export function Toolbar(props: Props): JSX.Element {
                     {busyKind === kind ? "Working…" : LABELS[kind]}
                 </button>
             ))}
+
+            {showColumnChooser && (
+                <button
+                    className={`txl-btn${columnChooserOpen ? " is-open" : ""}`}
+                    aria-haspopup="dialog"
+                    aria-expanded={columnChooserOpen}
+                    title="Choose which columns this view shows"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onToggleColumnChooser();
+                    }}
+                >
+                    Columns
+                </button>
+            )}
 
             {hasFilters && (
                 <button className="txl-btn" onClick={onClearFilters} title="Clear all filters">

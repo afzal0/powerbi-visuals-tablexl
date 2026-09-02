@@ -570,3 +570,145 @@ body {
     line-height: 1.6;
     opacity: 0.85;
 }
+
+/* ---------- Worksheet tabs ---------- */
+
+.txl-tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    flex: 0 0 auto;
+    padding: 0 4px;
+    min-height: 26px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    font-size: 11.5px;
+}
+
+.txl-tab {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 8px;
+    max-width: 160px;
+    cursor: pointer;
+    border-radius: 0 0 3px 3px;
+    flex: 0 0 auto;
+    opacity: 0.75;
+
+    &:hover {
+        opacity: 1;
+    }
+
+    &.is-active {
+        opacity: 1;
+        font-weight: 600;
+        box-shadow: inset 0 2px 0 #0078D4;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0078D4;
+        outline-offset: -2px;
+    }
+}
+
+.txl-tab-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.txl-tab-close,
+.txl-tab-add {
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 2px;
+    flex: 0 0 auto;
+
+    &:hover:not(:disabled) {
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    &:disabled {
+        opacity: 0.35;
+        cursor: default;
+    }
+
+    &:focus-visible {
+        outline: 2px solid #0078D4;
+        outline-offset: 1px;
+    }
+}
+
+.txl-tab-add {
+    font-size: 14px;
+    padding: 0 8px;
+}
+
+.txl-tab-input {
+    font-family: inherit;
+    font-size: 11.5px;
+    padding: 1px 5px;
+    margin: 3px 0;
+    width: 130px;
+    border: 1px solid #0078D4;
+    border-radius: 2px;
+    flex: 0 0 auto;
+}
+
+.txl-tabs-hint {
+    display: flex;
+    align-items: center;
+    font-size: 10px;
+    opacity: 0.7;
+    white-space: nowrap;
+    padding-right: 4px;
+}
+
+/* ---------- Column chooser ---------- */
+
+.txl-chooser .txl-check.is-disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+.txl-chooser-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0 6px;
+}
+
+.txl-link {
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-family: inherit;
+    font-size: 11px;
+    color: #0078D4;
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:focus-visible {
+        outline: 2px solid #0078D4;
+        outline-offset: 1px;
+    }
+}
+
+.txl-chooser-count {
+    margin-left: auto;
+    font-size: 10px;
+    color: @muted;
+    font-variant-numeric: tabular-nums;
+}
+
+.txl-btn.is-open {
+    background: #EFF6FC;
+    border-color: #0078D4;
+}
