@@ -34,13 +34,19 @@ interface Props {
     onClose(): void;
 }
 
-const POPOVER_WIDTH = 260;
+const POPOVER_WIDTH = 232;
+/** Below this the visual is too narrow to hang a panel beside anything. */
+const MIN_PANEL_WIDTH = 200;
 /** Below this much free space the menu is not usable as a dropdown. */
 const MIN_USABLE_HEIGHT = 240;
 /** Head, sort, condition, labels and actions — everything but the value list. */
 const CHROME_HEIGHT = 292;
-/** Compact mode lays the sort actions out in a row, which reclaims a block. */
+/** A row of sort actions instead of a stack reclaims about this much. */
 const COMPACT_CHROME_SAVING = 62;
+/** Collapsing the condition editor behind a link reclaims about this much. */
+const CONDITION_SAVING = 66;
+/** Under this height the value list would be crowded out by everything else. */
+const SHORT_PANEL = 344;
 
 /**
  * Excel's column filter menu: sort actions, an optional condition, and a
@@ -75,6 +81,7 @@ export function FilterPopover(props: Props): JSX.Element {
     const [condition, setCondition] = React.useState<ConditionFilter | null>(
         current && current.kind === "condition" ? current : null
     );
+    const [conditionOpen, setConditionOpen] = React.useState(false);
 
     const rootRef = React.useRef<HTMLDivElement>(null);
 
@@ -172,12 +179,13 @@ export function FilterPopover(props: Props): JSX.Element {
     const spaceAbove = anchor.top - 8;
 
     /*
-     * In a small visual there is nowhere to hang a dropdown without cutting off
-     * its buttons, so the menu becomes a sheet covering the visual instead.
-     * That keeps Apply reachable however little room the report gives us.
+     * Width is decided by width alone. A table visual is typically wide but
+     * short, so keying this off the available *height* — as it used to — made
+     * the menu span the whole visual on perfectly ordinary reports. Too little
+     * height is not a width problem: the body scrolls and the buttons are
+     * pinned, so a short panel stays usable at its normal width.
      */
-    const compact =
-        container.width < 320 || Math.max(spaceBelow, spaceAbove) < MIN_USABLE_HEIGHT;
+    const compact = container.width < MIN_PANEL_WIDTH + 24;
 
     let style: React.CSSProperties;
     let panelHeight: number;
@@ -187,16 +195,15 @@ export function FilterPopover(props: Props): JSX.Element {
         style = {
             left: 4,
             top: 4,
-            width: Math.max(170, container.width - 8),
+            width: Math.max(150, container.width - 8),
             height: panelHeight
         };
     } else {
-        const openUpwards = spaceBelow < MIN_USABLE_HEIGHT && spaceAbove > spaceBelow;
         const width = Math.min(POPOVER_WIDTH, container.width - 8);
-        panelHeight = Math.min(
-            container.height - 8,
-            Math.max(MIN_USABLE_HEIGHT, openUpwards ? spaceAbove : spaceBelow)
-        );
+        // Open upwards only when that genuinely gives the panel more room.
+        const openUpwards = spaceAbove > spaceBelow && spaceBelow < MIN_USABLE_HEIGHT;
+        const room = Math.max(24, openUpwards ? spaceAbove : spaceBelow);
+        panelHeight = Math.min(container.height - 8, Math.max(MIN_USABLE_HEIGHT, room));
         style = {
             left: Math.max(4, Math.min(anchor.left, Math.max(4, container.width - width - 4))),
             width,
@@ -205,18 +212,36 @@ export function FilterPopover(props: Props): JSX.Element {
         if (openUpwards) {
             style.bottom = Math.max(4, container.height - anchor.top + 2);
         } else {
+            // Never run past the bottom edge; the body scrolls instead.
             style.top = anchor.bottom + 2;
+            style.maxHeight = Math.max(140, container.height - anchor.bottom - 8);
+            panelHeight = style.maxHeight as number;
         }
     }
 
-    // The list gives up its space first; the body scrolls if that is not enough.
-    const chrome = compact ? CHROME_HEIGHT - COMPACT_CHROME_SAVING : CHROME_HEIGHT;
-    const listHeight = Math.max(84, Math.min(240, panelHeight - chrome));
+    /*
+     * In a short panel the sort actions and the condition editor would crowd
+     * out the value list — the thing the menu mostly exists for. The sort row
+     * goes horizontal and the condition collapses behind a link, which hands
+     * roughly 130px back to the list.
+     */
+    const short = panelHeight < SHORT_PANEL;
+    const tight = compact || short;
+    const showConditionEditor = showConditions && (!short || conditionOpen || !!condition);
+
+    let chrome = CHROME_HEIGHT;
+    if (tight) {
+        chrome -= COMPACT_CHROME_SAVING;
+    }
+    if (showConditions && !showConditionEditor) {
+        chrome -= CONDITION_SAVING;
+    }
+    const listHeight = Math.max(96, Math.min(240, panelHeight - chrome));
 
     return (
         <div
             ref={rootRef}
-            className={`txl-popover${compact ? " is-compact" : ""}`}
+            className={`txl-popover${tight ? " is-compact" : ""}`}
             style={style}
             role="dialog"
             aria-label={`Filter ${column.displayName}`}
@@ -253,7 +278,7 @@ export function FilterPopover(props: Props): JSX.Element {
                 )}
             </div>
 
-            {showConditions && (
+            {showConditionEditor && (
                 <div className="txl-popover-section">
                     <div className="txl-popover-label">Condition</div>
                     <ConditionEditor
@@ -261,6 +286,14 @@ export function FilterPopover(props: Props): JSX.Element {
                         value={condition}
                         onChange={setCondition}
                     />
+                </div>
+            )}
+
+            {showConditions && !showConditionEditor && (
+                <div className="txl-popover-section txl-condition-collapsed">
+                    <button className="txl-link" onClick={() => setConditionOpen(true)}>
+                        Add a condition
+                    </button>
                 </div>
             )}
 

@@ -8,6 +8,19 @@ function numberRange(min: number, max: number): powerbi.visuals.NumUpDownFormat 
     };
 }
 
+class TableStyleCard extends formattingSettings.SimpleCard {
+    name = "tableStyle";
+    displayName = "Style preset";
+
+    preset = new formattingSettings.AutoDropdown({
+        name: "preset",
+        displayName: "Style",
+        value: "default"
+    });
+
+    slices = [this.preset];
+}
+
 class HeaderCard extends formattingSettings.SimpleCard {
     name = "header";
     displayName = "Column headers";
@@ -39,7 +52,7 @@ class HeaderCard extends formattingSettings.SimpleCard {
     backColor = new formattingSettings.ColorPicker({
         name: "backColor",
         displayName: "Background color",
-        value: { value: "#F3F2F1" }
+        value: { value: "#FFFFFF" }
     });
 
     alignment = new formattingSettings.AutoDropdown({
@@ -128,7 +141,7 @@ class ValuesCard extends formattingSettings.SimpleCard {
     banded = new formattingSettings.ToggleSwitch({
         name: "banded",
         displayName: "Alternate row colors",
-        value: true
+        value: false
     });
 
     bandedBackColor = new formattingSettings.ColorPicker({
@@ -202,7 +215,7 @@ class GridCard extends formattingSettings.SimpleCard {
     showVertical = new formattingSettings.ToggleSwitch({
         name: "showVertical",
         displayName: "Vertical gridlines",
-        value: true
+        value: false
     });
 
     gridColor = new formattingSettings.ColorPicker({
@@ -221,7 +234,7 @@ class GridCard extends formattingSettings.SimpleCard {
     outline = new formattingSettings.ToggleSwitch({
         name: "outline",
         displayName: "Outline",
-        value: true
+        value: false
     });
 
     outlineColor = new formattingSettings.ColorPicker({
@@ -515,6 +528,7 @@ class ExportCard extends formattingSettings.CompositeCard {
  * visual-level objects, never per-column metadata objects.
  */
 export class TableXLSettings extends formattingSettings.Model {
+    tableStyle = new TableStyleCard();
     header = new HeaderCard();
     values = new ValuesCard();
     grid = new GridCard();
@@ -524,6 +538,7 @@ export class TableXLSettings extends formattingSettings.Model {
     exportSettings = new ExportCard();
 
     cards: formattingSettings.Cards[] = [
+        this.tableStyle,
         this.header,
         this.values,
         this.grid,
@@ -536,6 +551,7 @@ export class TableXLSettings extends formattingSettings.Model {
     /** The static card list, used to rebuild `cards` on each format-pane build. */
     baseCards(): formattingSettings.Cards[] {
         return [
+            this.tableStyle,
             this.header,
             this.values,
             this.grid,
@@ -547,4 +563,4 @@ export class TableXLSettings extends formattingSettings.Model {
     }
 }
 
-export type { HeaderCard, ValuesCard, GridCard, FilteringCard, ViewsCard, TotalsCard, ExportCard };
+export type { TableStyleCard, HeaderCard, ValuesCard, GridCard, FilteringCard, ViewsCard, TotalsCard, ExportCard };

@@ -151,6 +151,7 @@ export class Visual implements IVisual {
             this.isAuthor = options.viewMode !== undefined
                 ? options.viewMode !== powerbi.ViewMode.View
                 : this.isAuthor;
+            this.lastObjects = dataView?.metadata?.objects;
             this.model = transform(dataView, this.host);
             this.selection.setRows(this.model ? this.model.rows : []);
 
@@ -352,6 +353,8 @@ export class Visual implements IVisual {
     }
 
     private lastViewport = { width: 0, height: 0 };
+    /** Visual-level objects, so the theme resolver can tell set from default. */
+    private lastObjects: powerbi.DataViewObjects | undefined;
     /** Edit / InFocusEdit mean the report is open for editing. */
     private isAuthor = false;
 
@@ -362,7 +365,11 @@ export class Visual implements IVisual {
         if (viewport) {
             this.lastViewport = { width: viewport.width, height: viewport.height };
         }
-        const style = resolveStyle(this.settings, this.host.colorPalette);
+        const style = resolveStyle(
+            this.settings,
+            this.host.colorPalette,
+            this.lastObjects
+        );
         this.root.render(
             React.createElement(App, {
                 snapshotId: this.snapshotId,

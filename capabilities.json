@@ -60,6 +60,43 @@
                 }
             }
         },
+        "tableStyle": {
+            "displayName": "Style preset",
+            "properties": {
+                "preset": {
+                    "displayName": "Style",
+                    "description": "Starting point for the table's look. Anything you set yourself overrides it.",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "default",
+                                "displayName": "Default"
+                            },
+                            {
+                                "value": "none",
+                                "displayName": "None"
+                            },
+                            {
+                                "value": "minimal",
+                                "displayName": "Minimal"
+                            },
+                            {
+                                "value": "boldHeader",
+                                "displayName": "Bold header"
+                            },
+                            {
+                                "value": "alternating",
+                                "displayName": "Alternating rows"
+                            },
+                            {
+                                "value": "contrast",
+                                "displayName": "Contrast"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "header": {
             "displayName": "Column headers",
             "properties": {

@@ -25,6 +25,16 @@ export function readBool(
     return typeof value === "boolean" ? value : defaultValue;
 }
 
+/** Boolean property that is meaningfully "unset" rather than false. */
+export function readOptionalBool(
+    objects: DataViewObjects | undefined,
+    objectName: string,
+    propertyName: string
+): boolean | null {
+    const value = raw(objects, objectName, propertyName);
+    return typeof value === "boolean" ? value : null;
+}
+
 export function readNumber(
     objects: DataViewObjects | undefined,
     objectName: string,

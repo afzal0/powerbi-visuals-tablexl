@@ -66,10 +66,15 @@ export function ColumnChooser(props: Props): JSX.Element {
     };
 
     // Sits under the toolbar button, or fills the visual when there is no room.
-    const compact = container.width < 320 || container.height < 300;
+    const compact = container.width < 224;
     const panelStyle: React.CSSProperties = compact
-        ? { left: 4, top: 4, width: Math.max(170, container.width - 8), height: container.height - 8 }
-        : { left: 6, top: 34, width: 246, maxHeight: Math.max(200, container.height - 60) };
+        ? { left: 4, top: 4, width: Math.max(150, container.width - 8), height: container.height - 8 }
+        : {
+              left: 6,
+              top: 34,
+              width: Math.min(232, container.width - 12),
+              maxHeight: Math.max(160, container.height - 44)
+          };
 
     return (
         <div

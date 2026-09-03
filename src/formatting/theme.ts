@@ -2,7 +2,10 @@ import powerbi from "powerbi-visuals-api";
 import ISandboxExtendedColorPalette = powerbi.extensibility.ISandboxExtendedColorPalette;
 
 import { Alignment, ColumnModel } from "../data/types";
+import { readOptionalBool, readOptionalFill } from "../settings/objectReader";
 import { TableXLSettings } from "../settings/settingsModel";
+import { mixColors } from "./conditionalFormatting";
+import { presetSpec } from "./themePresets";
 
 export interface TextStyle {
     fontFamily: string;
@@ -78,21 +81,48 @@ function resolveRowHeight(density: string, explicit: number, fontSize: number): 
 }
 
 /**
- * Folds the format-pane settings and the host palette into the concrete style
- * model used by both the grid and the exporters, so a PDF or workbook always
- * matches what is on screen.
+ * Folds the report theme, the chosen style preset and the format-pane settings
+ * into the concrete style model used by both the grid and the exporters, so a
+ * PDF or workbook always matches what is on screen.
  *
- * In high-contrast mode every user-chosen colour is replaced by a palette
- * colour, as required for accessibility certification.
+ * Colours follow the report theme unless the author set one explicitly. That is
+ * what makes the visual sit on a themed page without looking foreign: Power BI
+ * gives every visual the same foreground/background pair, and the neutrals are
+ * derived from those two rather than hard-coded, so a dark or branded theme
+ * comes out right instead of staying stubbornly light grey.
+ *
+ * In high-contrast mode every colour is replaced by a palette colour, as
+ * required for accessibility certification.
  */
 export function resolveStyle(
     settings: TableXLSettings,
-    palette: ISandboxExtendedColorPalette
+    palette: ISandboxExtendedColorPalette,
+    objects?: powerbi.DataViewObjects
 ): ResolvedStyle {
     const highContrast = !!palette.isHighContrast;
-    const foreground = palette.foreground?.value ?? "#000000";
+    const foreground = palette.foreground?.value ?? "#252423";
     const background = palette.background?.value ?? "#FFFFFF";
     const selected = palette.foregroundSelected?.value ?? foreground;
+    const themeAccent = palette.hyperlink?.value ?? "#0078D4";
+
+    const preset = presetSpec(settings.tableStyle.preset.value as string);
+
+    /** A neutral derived from the theme's own two anchor colours. */
+    const neutral = (amount: number): string => mixColors(background, foreground, amount);
+
+    /**
+     * An explicit choice in the format pane wins; otherwise the theme decides.
+     * The settings model cannot express "unset", so the persisted objects are
+     * consulted directly.
+     */
+    const chosen = (objectName: string, property: string): string | null =>
+        readOptionalFill(objects, objectName, property);
+
+    const pick = (objectName: string, property: string, themed: string): string =>
+        chosen(objectName, property) ?? themed;
+
+    const pickBool = (objectName: string, property: string, fromPreset: boolean): boolean =>
+        readOptionalBool(objects, objectName, property) ?? fromPreset;
 
     const headerCard = settings.header;
     const valuesCard = settings.values;
@@ -105,16 +135,24 @@ export function resolveStyle(
     const header: HeaderStyle = {
         fontFamily: headerCard.font.fontFamily.value,
         fontSize: headerFontSize,
-        bold: !!headerCard.font.bold?.value,
+        bold: readOptionalBool(objects, "header", "bold") ?? preset.headerBold,
         italic: !!headerCard.font.italic?.value,
         underline: !!headerCard.font.underline?.value,
-        color: highContrast ? background : headerCard.fontColor.value.value,
-        background: highContrast ? foreground : headerCard.backColor.value.value,
+        color: highContrast ? background : pick("header", "fontColor", foreground),
+        background: highContrast
+            ? foreground
+            : pick(
+                  "header",
+                  "backColor",
+                  preset.headerFillMix > 0 ? neutral(preset.headerFillMix) : background
+              ),
         alignment: headerCard.alignment.value as Alignment,
         wrapText: headerCard.wrapText.value,
         sticky: headerCard.sticky.value,
-        showBorder: headerCard.showBorder.value,
-        borderColor: highContrast ? foreground : headerCard.borderColor.value.value,
+        showBorder: pickBool("header", "showBorder", preset.headerBorder),
+        borderColor: highContrast
+            ? foreground
+            : pick("header", "borderColor", neutral(preset.headerBorderMix)),
         borderWidth: headerCard.borderWidth.value
     };
 
@@ -124,12 +162,12 @@ export function resolveStyle(
         bold: !!valuesCard.font.bold?.value,
         italic: !!valuesCard.font.italic?.value,
         underline: false,
-        color: highContrast ? foreground : valuesCard.fontColor.value.value,
-        background: highContrast ? background : valuesCard.backColor.value.value,
+        color: highContrast ? foreground : pick("values", "fontColor", foreground),
+        background: highContrast ? background : pick("values", "backColor", background),
         // Banding relies on subtle fills that high contrast cannot express.
-        banded: highContrast ? false : valuesCard.banded.value,
-        bandedBackground: valuesCard.bandedBackColor.value.value,
-        bandedColor: valuesCard.bandedFontColor.value.value,
+        banded: highContrast ? false : pickBool("values", "banded", preset.banded),
+        bandedBackground: pick("values", "bandedBackColor", neutral(preset.bandedMix || 0.04)),
+        bandedColor: pick("values", "bandedFontColor", foreground),
         rowHeight: resolveRowHeight(
             valuesCard.density.value as string,
             valuesCard.rowHeight.value,
@@ -137,24 +175,34 @@ export function resolveStyle(
         ),
         wrapText: valuesCard.wrapText.value,
         showRowNumbers: valuesCard.showRowNumbers.value,
-        selectionColor: highContrast ? selected : valuesCard.selectionColor.value.value
+        selectionColor: highContrast
+            ? selected
+            : pick("values", "selectionColor", mixColors(background, themeAccent, 0.22))
     };
 
     const grid: GridStyle = {
-        showHorizontal: highContrast ? true : gridCard.showHorizontal.value,
-        showVertical: highContrast ? true : gridCard.showVertical.value,
-        color: highContrast ? foreground : gridCard.gridColor.value.value,
+        showHorizontal: highContrast ? true : pickBool("grid", "showHorizontal", preset.showHorizontal),
+        showVertical: highContrast ? true : pickBool("grid", "showVertical", preset.showVertical),
+        color: highContrast ? foreground : pick("grid", "gridColor", neutral(preset.gridMix)),
         width: highContrast ? Math.max(1, gridCard.gridWidth.value) : gridCard.gridWidth.value,
-        outline: gridCard.outline.value,
-        outlineColor: highContrast ? foreground : gridCard.outlineColor.value.value,
+        outline: pickBool("grid", "outline", preset.outline),
+        outlineColor: highContrast
+            ? foreground
+            : pick("grid", "outlineColor", neutral(preset.headerBorderMix)),
         paddingX: gridCard.paddingX.value
     };
 
     const totals: TotalsStyle = {
         show: totalsCard.show.value,
         label: totalsCard.label.value || "Total",
-        color: highContrast ? background : totalsCard.fontColor.value.value,
-        background: highContrast ? foreground : totalsCard.backColor.value.value,
+        color: highContrast ? background : pick("totals", "fontColor", foreground),
+        background: highContrast
+            ? foreground
+            : pick(
+                  "totals",
+                  "backColor",
+                  preset.totalsFillMix > 0 ? neutral(preset.totalsFillMix) : background
+              ),
         bold: totalsCard.bold.value
     };
 
@@ -164,7 +212,9 @@ export function resolveStyle(
         grid,
         totals,
         highContrast,
-        accent: highContrast ? foreground : settings.filtering.indicatorColor.value.value
+        accent: highContrast
+            ? foreground
+            : pick("filtering", "indicatorColor", themeAccent)
     };
 }
 

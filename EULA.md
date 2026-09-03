@@ -5,7 +5,7 @@
 **Software:** the Power BI visual "Excel-Style Table" (`tableXL`), including the
 `.pbiviz` package and any documentation supplied with it ("the Software").
 
-> **Before you publish:** two items below are marked **[COMPLETE THIS]** and
+> **Before you publish:** two items below are marked  and
 > must be filled in. This document has not been reviewed by a lawyer. Microsoft
 > also offers a [Standard Contract](https://go.microsoft.com/fwlink/?linkid=2041178)
 > that you can select in Partner Center instead of supplying your own EULA, and
